@@ -1,0 +1,58 @@
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { PrismaClient, member } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
+
+@Injectable()
+export class SigninService {
+  private readonly logger = new Logger(SigninService.name);
+
+  constructor(private prisma: PrismaClient) {}
+
+  async signin(email: string, password: string): Promise<member> {
+    const member = await this.prisma.member.findUnique({
+      where: {
+        email,
+      },
+    });
+    if (!member) {
+      this.logger.error('email does not exist.');
+      throw new UnauthorizedException('Email or password is incorrect.');
+    }
+
+    const provider = await this.prisma.provider.findUnique({
+      where: {
+        user_id: member.id,
+      },
+    });
+    if (!provider) {
+      this.logger.error('provider does not exist.');
+      throw new InternalServerErrorException('Provider does not exist.');
+    }
+
+    const savedPassword = await this.prisma.password.findUnique({
+      where: {
+        user_id: member.id,
+      },
+    });
+    if (!savedPassword) {
+      this.logger.error('password does not exist.');
+      throw new InternalServerErrorException('Password does not exist.');
+    }
+
+    const comparePassword = await bcrypt.compare(
+      password,
+      savedPassword.password,
+    );
+    if (!comparePassword) {
+      this.logger.error('password is incorrect.');
+      throw new UnauthorizedException('Email or password is incorrect.');
+    }
+
+    return member;
+  }
+}

@@ -1,0 +1,95 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+  binaryTargets   = ["native", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["auth", "member", "public"]
+}
+
+model auto_login_code {
+  id                              BigInt   @id(map: "pk_regen_code") @default(autoincrement())
+  code                            String   @unique(map: "uni_regen_code") @db.VarChar(256)
+  create_date                     DateTime @default(now()) @db.Timestamptz(6)
+  expire_date                     DateTime @db.Timestamptz(6)
+  ssid                            BigInt   @unique(map: "uni_ssid")
+  ssid_auto_login_code_ssidTossid ssid     @relation("auto_login_code_ssidTossid", fields: [ssid], references: [id], onDelete: Cascade, map: "fk_ssid")
+
+  @@schema("auth")
+}
+
+model password {
+  id          Int      @id(map: "pk_password") @default(autoincrement())
+  user_id     Int      @unique(map: "uni_password")
+  password    String   @db.VarChar(256)
+  update_date DateTime @default(now()) @db.Timestamptz(6)
+  member      member   @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "fk_user_id")
+
+  @@schema("auth")
+}
+
+model provider {
+  id          Int           @id(map: "pk_provider") @default(autoincrement())
+  user_id     Int           @unique(map: "uni_provider")
+  provider    provider_type @default(local)
+  member      member        @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "fk_user_id")
+  social_info social_info?
+
+  @@schema("auth")
+}
+
+model social_info {
+  id           Int      @id(map: "pk_social_info") @default(autoincrement())
+  provider_id  Int      @unique(map: "uni_social_info")
+  social_code  String   @db.VarChar(128)
+  access_token String?  @db.VarChar(256)
+  provider     provider @relation(fields: [provider_id], references: [id], onDelete: Cascade, map: "fk_provider_id")
+
+  @@schema("auth")
+}
+
+model member {
+  id       Int       @id(map: "pk_users") @default(autoincrement())
+  uuid_key String    @unique(map: "uni_uuid_key") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email    String    @unique(map: "uni_email") @db.VarChar(256)
+  password password?
+  provider provider?
+  profile  profile?
+  ssid     ssid[]
+
+  @@schema("member")
+}
+
+model profile {
+  id          Int      @id(map: "pk_profile") @default(autoincrement())
+  user_id     Int      @unique(map: "uni_profile")
+  nickname    String   @unique(map: "uni_nickname") @db.VarChar(32)
+  image_url   String?  @db.VarChar(256)
+  join_date   DateTime @default(now()) @db.Timestamptz(6)
+  update_date DateTime @default(now()) @db.Timestamptz(6)
+  member      member   @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "fk_user_id")
+
+  @@schema("member")
+}
+
+model ssid {
+  id                                         BigInt           @id(map: "pk_ssid") @default(autoincrement())
+  user_id                                    Int
+  SSID                                       String           @db.VarChar(256)
+  create_date                                DateTime         @default(now()) @db.Timestamptz(6)
+  auto_login_code_auto_login_code_ssidTossid auto_login_code? @relation("auto_login_code_ssidTossid")
+  member                                     member           @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "fk_user_id")
+
+  @@unique([user_id, SSID], map: "uni_user_ssid")
+  @@schema("member")
+}
+
+enum provider_type {
+  local
+  google
+
+  @@schema("public")
+}
