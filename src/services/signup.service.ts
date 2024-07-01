@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { PrismaService } from './prisma.service';
 
 @Injectable()
 export class SignupService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: PrismaService) {}
 
   /**
    * Create a new member

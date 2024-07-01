@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Req } from '@nestjs/common';
 import { Request } from 'express';
 import { TypiaValidationPipe } from 'src/pipes/validation.pipe';
 import { SigninService } from 'src/services/signin.service';
@@ -17,18 +17,22 @@ export class LocalController {
   ) {}
 
   @Post('signup')
+  @HttpCode(201)
   async signup(
     @Body(new TypiaValidationPipe(validateSignupBody)) body: ISignupBody,
   ) {
     await this.signupService.signup(body.email, body.password, body.nickname);
+    return 'Signup success';
   }
 
   @Post('signin')
+  @HttpCode(200)
   async signin(
     @Body(new TypiaValidationPipe(validateSigninBody)) body: ISigninBody,
     @Req() req: Request,
   ) {
     const user = await this.signinService.signin(body.email, body.password);
     req.session.uuidKey = user.uuid_key;
+    return 'Signin success';
   }
 }
