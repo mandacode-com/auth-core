@@ -1,18 +1,18 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { AuthModule } from 'src/modules/auth.module';
 import { PrismaService } from 'src/services/prisma.service';
 import { createTestMember, prismaService, redisClient } from './setup-e2e';
 import request from 'supertest';
 import session from 'express-session';
 import RedisStore from 'connect-redis';
+import { AppModule } from 'src/app.module';
 
 describe('Local', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
-      imports: [AuthModule],
+      imports: [AppModule],
     })
       .overrideProvider(PrismaService)
       .useValue(prismaService)
