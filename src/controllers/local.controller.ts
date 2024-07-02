@@ -19,17 +19,23 @@ export class LocalController {
   @Post('signup')
   @HttpCode(201)
   async signup(
+    @Req() req: Request,
     @Body(new TypiaValidationPipe(validateSignupBody)) body: ISignupBody,
   ) {
-    await this.signupService.signup(body.email, body.password, body.nickname);
+    const user = await this.signupService.signup(
+      body.email,
+      body.password,
+      body.nickname,
+    );
+    req.session.uuid = user.uuid_key;
     return 'Signup success';
   }
 
   @Post('signin')
   @HttpCode(200)
   async signin(
-    @Body(new TypiaValidationPipe(validateSigninBody)) body: ISigninBody,
     @Req() req: Request,
+    @Body(new TypiaValidationPipe(validateSigninBody)) body: ISigninBody,
   ) {
     const user = await this.signinService.signin(body.email, body.password);
     req.session.uuid = user.uuid_key;
