@@ -12,6 +12,8 @@ import RedisStore from 'connect-redis';
 import { createClient } from 'redis';
 import { Logger } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
+import { PrismaExceptionFilter } from './filters/prismaException.filter';
+import { HttpExceptionFilter } from './filters/httpException.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -20,12 +22,15 @@ async function bootstrap() {
   const logger = new Logger();
   const config = app.get(ConfigService<IConfig, true>);
 
+  const sessionConfig = config.get<ISessionConfig>('session');
+  const cookieConfig = config.get<ICookieConfig>('cookie');
+  const redisConfig = config.get<IRedisConfig>('redis');
+
   // Session configuration
   let cookieOptions: session.CookieOptions = {};
   let sessionStore: session.Store | undefined;
   if (config.get('nodeEnv') === 'production') {
     // Redis session store
-    const redisConfig = config.get<IRedisConfig>('redis');
     const redisClient = createClient({
       url: redisConfig.url,
     })
@@ -43,6 +48,7 @@ async function bootstrap() {
     // Secure cookie options
     cookieOptions = {
       secure: true,
+      maxAge: sessionConfig.timeout,
       sameSite: 'lax',
       priority: 'high',
     };
@@ -51,6 +57,7 @@ async function bootstrap() {
     cookieOptions = {
       secure: false,
       priority: 'high',
+      maxAge: sessionConfig.timeout,
     };
   } else if (config.get('nodeEnv') === 'test') {
     // Redis session store
@@ -62,16 +69,17 @@ async function bootstrap() {
     cookieOptions = {
       secure: false,
       priority: 'high',
+      maxAge: sessionConfig.timeout,
     };
   }
 
   // Add session middleware
-  const sessionConfig = config.get<ISessionConfig>('session');
   app.use(
     session({
       name: 'SID',
       secret: sessionConfig.secret,
       resave: false,
+      rolling: true,
       saveUninitialized: false,
       cookie: cookieOptions,
       store: sessionStore,
@@ -79,8 +87,10 @@ async function bootstrap() {
   );
 
   // Add cookie parser middleware
-  const cookieConfig = config.get<ICookieConfig>('cookie');
   app.use(cookieParser(cookieConfig.secret));
+
+  // Implement global exception filter
+  app.useGlobalFilters(new HttpExceptionFilter(), new PrismaExceptionFilter());
 
   await app.listen(config.get<number>('port'));
   logger.log(`Server is running on: ${await app.getUrl()}`);

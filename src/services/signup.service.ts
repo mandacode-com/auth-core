@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from './prisma.service';
 
@@ -17,11 +17,18 @@ export class SignupService {
     const hashedPassword = await bcrypt.hash(password, 10);
     const modifiedNickname = nickname || email.split('@')[0];
     return await this.prisma.$transaction(async (tx) => {
-      const member = await tx.member.create({
-        data: {
-          email,
-        },
-      });
+      const member = await tx.member
+        .create({
+          data: {
+            email,
+          },
+        })
+        .catch((e) => {
+          if (e.code === 'P2002') {
+            throw new ConflictException('Email already exists');
+          }
+          throw e;
+        });
       await tx.password.create({
         data: {
           member: { connect: { id: member.id } },

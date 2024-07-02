@@ -14,6 +14,7 @@ export function validate(raw: Record<string, unknown>) {
     session: {
       secret: raw.SESSION_SECRET as string,
       storagePath: raw.SESSION_STORAGE_PATH as string,
+      timeout: parseInt(raw.SESSION_TIMEOUT as string),
     },
     redis: {
       url: raw.REDIS_URL as string,
