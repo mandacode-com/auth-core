@@ -1,5 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
-import { log } from 'console';
+import { Logger } from '@nestjs/common';
 import { IConfig } from 'src/types/config';
 import { validateConfig } from 'src/validations/config.validate';
 
@@ -14,6 +13,8 @@ const isTrue = (
   if (value === undefined) return defaultValue;
   throw new Error('Invalid boolean value');
 };
+
+const logger = new Logger();
 
 export function validate(raw: Record<string, unknown>) {
   const config: IConfig = {
@@ -32,15 +33,15 @@ export function validate(raw: Record<string, unknown>) {
       url: raw.REDIS_URL as string,
     },
     status: {
-      localSignup: isTrue(raw.STATUS_LOCAL_SIGNUP as string | undefined),
-      localSignin: isTrue(raw.STATUS_LOCAL_SIGNIN as string | undefined),
+      localSignup: isTrue(raw.STATUS_LOCAL_SIGNUP as string),
+      localSignin: isTrue(raw.STATUS_LOCAL_SIGNIN as string),
     },
   };
   const result = validateConfig(config);
   if (result.success) {
     return config;
   }
-  log(result.errors);
   const errorPath = result.errors.map((error) => error.path).join(', ');
-  throw new BadRequestException(`Validation failed for ${errorPath}`);
+  logger.error(`Validation failed for ${errorPath}`);
+  throw new Error('Config validation failed');
 }
