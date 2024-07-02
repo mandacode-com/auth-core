@@ -2,8 +2,10 @@ import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AuthModule } from 'src/modules/auth.module';
 import { PrismaService } from 'src/services/prisma.service';
-import { prismaService } from './setup-e2e';
+import { createTestMember, prismaService, redisClient } from './setup-e2e';
 import request from 'supertest';
+import session from 'express-session';
+import RedisStore from 'connect-redis';
 
 describe('Local', () => {
   let app: INestApplication;
@@ -11,15 +13,23 @@ describe('Local', () => {
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       imports: [AuthModule],
-      providers: [
-        {
-          provide: PrismaService,
-          useValue: prismaService,
-        },
-      ],
-    }).compile();
+    })
+      .overrideProvider(PrismaService)
+      .useValue(prismaService)
+      .compile();
 
     app = module.createNestApplication();
+    app.use(
+      session({
+        secret: 'secret',
+        resave: false,
+        saveUninitialized: false,
+        cookie: {},
+        store: new RedisStore({
+          client: redisClient,
+        }),
+      }),
+    );
     await app.init();
   });
 
@@ -27,16 +37,32 @@ describe('Local', () => {
     await app.close();
   });
 
-  describe('POST /local/signup', () => {
-    const email = 'test12@test.com';
+  describe('[POST] /local/signup', () => {
+    const email = 'email@ifelfi.com';
     const password = 'password';
-    const nickname = 'nickname1';
+    const nickname = 'nickname';
     it('should create a new member', async () => {
       const response = await request(app.getHttpServer())
         .post('/local/signup')
-        .send({ email, password, nickname })
-        .expect(201);
-      expect(response.text).toEqual('Signup success');
+        .send({ email, password, nickname });
+
+      expect(response.status).toEqual(201);
+    });
+  });
+
+  describe('[POST] /local/signin', () => {
+    const email = 'email@ifelfi.com';
+    const password = 'password';
+    beforeEach(async () => {
+      createTestMember(email, password);
+    });
+
+    it('should signin', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/local/signin')
+        .send({ email, password });
+
+      expect(response.status).toEqual(200);
     });
   });
 });

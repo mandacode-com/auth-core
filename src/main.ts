@@ -23,10 +23,7 @@ async function bootstrap() {
   // Session configuration
   let cookieOptions: session.CookieOptions = {};
   let sessionStore: session.Store | undefined;
-  if (
-    config.get('nodeEnv') === 'production' ||
-    config.get('nodeEnv') === 'test'
-  ) {
+  if (config.get('nodeEnv') === 'production') {
     // Redis session store
     const redisConfig = config.get<IRedisConfig>('redis');
     const redisClient = createClient({
@@ -49,7 +46,18 @@ async function bootstrap() {
       sameSite: 'lax',
       priority: 'high',
     };
-  } else {
+  } else if (config.get('nodeEnv') === 'development') {
+    // Insecure cookie options
+    cookieOptions = {
+      secure: false,
+      priority: 'high',
+    };
+  } else if (config.get('nodeEnv') === 'test') {
+    // Redis session store
+    sessionStore = new RedisStore({
+      client: createClient(),
+    });
+
     // Insecure cookie options
     cookieOptions = {
       secure: false,

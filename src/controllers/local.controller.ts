@@ -32,7 +32,7 @@ export class LocalController {
     @Req() req: Request,
   ) {
     const user = await this.signinService.signin(body.email, body.password);
-    req.session.uuidKey = user.uuid_key;
+    req.session.uuid = user.uuid_key;
     return 'Signin success';
   }
 }

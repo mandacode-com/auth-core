@@ -6,7 +6,7 @@ export interface ISigninBody {
 }
 
 export interface ISignupBody {
-  nickname?: string & tags.Pattern<'^[a-zA-Z]+$'>;
+  nickname?: string & tags.Pattern<'^[a-zA-Z0_9]+$'>;
   email: string & tags.Format<'email'>;
   password: string;
 }
