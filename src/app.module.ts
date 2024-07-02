@@ -8,6 +8,7 @@ import { AppController } from './controllers/app.controller';
   imports: [
     ConfigModule.forRoot({
       validate: validate,
+      isGlobal: true,
     }),
     AuthModule,
   ],

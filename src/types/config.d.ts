@@ -7,6 +7,7 @@ export interface IConfig {
   cookie: ICookieConfig;
   session: ISessionConfig;
   redis: IRedisConfig;
+  status: IStatusConfig;
 }
 
 export interface ICookieConfig {
@@ -21,4 +22,9 @@ export interface ISessionConfig {
 
 export interface IRedisConfig {
   url: string;
+}
+
+export interface IStatusConfig {
+  localSignin: boolean;
+  localSignup: boolean;
 }
