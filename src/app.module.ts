@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { validate } from './config/validate';
 import { AuthModule } from './modules/auth.module';
 import { AppController } from './controllers/app.controller';
+import { LoggerModule } from 'nestjs-pino';
+import pino from 'pino';
 
 @Module({
   imports: [
@@ -11,6 +13,14 @@ import { AppController } from './controllers/app.controller';
       isGlobal: true,
     }),
     AuthModule,
+    LoggerModule.forRoot({
+      pinoHttp: {
+        stream: pino.destination({
+          dest: 'logs/app.log',
+          sync: false,
+        }),
+      },
+    }),
   ],
   controllers: [AppController],
 })

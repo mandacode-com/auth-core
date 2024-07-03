@@ -1,18 +1,19 @@
 import {
   Injectable,
   InternalServerErrorException,
-  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { member } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from './prisma.service';
+import { PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class SigninService {
-  private readonly logger = new Logger(SigninService.name);
-
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly logger: PinoLogger,
+  ) {}
 
   async signin(email: string, password: string): Promise<member> {
     const member = await this.prisma.member.findUnique({

@@ -14,6 +14,7 @@ import { Logger } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { PrismaExceptionFilter } from './filters/prismaException.filter';
 import { HttpExceptionFilter } from './filters/httpException.filter';
+import fs from 'fs';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -21,6 +22,12 @@ async function bootstrap() {
   });
   const logger = new Logger();
   const config = app.get(ConfigService<IConfig, true>);
+
+  // Create a log file
+  const logPath = 'logs/app.log';
+  if (!fs.existsSync(logPath)) {
+    fs.writeFileSync(logPath, '');
+  }
 
   const sessionConfig = config.get<ISessionConfig>('session');
   const cookieConfig = config.get<ICookieConfig>('cookie');
