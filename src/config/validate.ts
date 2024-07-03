@@ -25,6 +25,7 @@ export function validate(raw: Record<string, unknown>) {
       secret: raw.COOKIE_SECRET as string,
     },
     session: {
+      name: raw.SESSION_NAME as string,
       secret: raw.SESSION_SECRET as string,
       storagePath: raw.SESSION_STORAGE_PATH as string,
       timeout: parseInt(raw.SESSION_TIMEOUT as string),

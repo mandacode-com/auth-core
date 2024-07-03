@@ -23,10 +23,14 @@ async function bootstrap() {
   const logger = new Logger();
   const config = app.get(ConfigService<IConfig, true>);
 
-  // Create a log file
-  const logPath = 'logs/app.log';
-  if (!fs.existsSync(logPath)) {
-    fs.writeFileSync(logPath, '');
+  // Create a log file and directory if it doesn't exist
+  const logDir = 'logs';
+  const logFile = 'app.log';
+  if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir);
+  }
+  if (!fs.existsSync(`${logDir}/${logFile}`)) {
+    fs.writeFileSync(`${logDir}/${logFile}`, '');
   }
 
   const sessionConfig = config.get<ISessionConfig>('session');
@@ -38,7 +42,7 @@ async function bootstrap() {
   let sessionStore: session.Store | undefined;
   if (config.get('nodeEnv') === 'production') {
     // Redis session store
-    const redisClient = createClient({
+    const redisClient = await createClient({
       url: redisConfig.url,
     })
       .connect()
@@ -68,8 +72,18 @@ async function bootstrap() {
     };
   } else if (config.get('nodeEnv') === 'test') {
     // Redis session store
+    const redisClient = await createClient({
+      url: redisConfig.url,
+    })
+      .connect()
+      .catch((error) => {
+        logger.error('Failed to connect to Redis');
+        throw error;
+      });
+
+    // Create a Redis session store
     sessionStore = new RedisStore({
-      client: createClient(),
+      client: redisClient,
     });
 
     // Insecure cookie options
@@ -83,7 +97,7 @@ async function bootstrap() {
   // Add session middleware
   app.use(
     session({
-      name: 'SID',
+      name: sessionConfig.name,
       secret: sessionConfig.secret,
       resave: false,
       rolling: true,
