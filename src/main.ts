@@ -14,24 +14,14 @@ import { Logger } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { PrismaExceptionFilter } from './filters/prismaException.filter';
 import { HttpExceptionFilter } from './filters/httpException.filter';
-import fs from 'fs';
 
 async function bootstrap() {
+  // Create App instance
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log'],
   });
   const logger = new Logger();
   const config = app.get(ConfigService<IConfig, true>);
-
-  // Create a log file and directory if it doesn't exist
-  const logDir = 'logs';
-  const logFile = 'app.log';
-  if (!fs.existsSync(logDir)) {
-    fs.mkdirSync(logDir);
-  }
-  if (!fs.existsSync(`${logDir}/${logFile}`)) {
-    fs.writeFileSync(`${logDir}/${logFile}`, '');
-  }
 
   const sessionConfig = config.get<ISessionConfig>('session');
   const cookieConfig = config.get<ICookieConfig>('cookie');
