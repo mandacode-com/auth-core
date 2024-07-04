@@ -16,7 +16,6 @@ export interface ICookieConfig {
 
 export interface ISessionConfig {
   name: string;
-  storagePath: string;
   timeout: number;
 }
 
