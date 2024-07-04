@@ -39,10 +39,10 @@ describe('Issue', () => {
     await app.close();
   });
 
-  describe('[GET] /issue', () => {
+  describe('[GET] /session/issue', () => {
     it('should return 200', async () => {
       cacheManager.get = jest.fn().mockResolvedValue('uuid');
-      const response = await request(app.getHttpServer()).get('/issue');
+      const response = await request(app.getHttpServer()).get('/session/issue');
       expect(response.status).toEqual(200);
     });
   });

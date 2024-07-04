@@ -9,11 +9,11 @@ import {
 import { Request } from 'express';
 import { CodeService } from 'src/services/code.service';
 
-@Controller('issue')
-export class CodeController {
+@Controller('session')
+export class SessionController {
   constructor(private readonly codeService: CodeService) {}
 
-  @Get()
+  @Get('issue')
   @HttpCode(200)
   async getUuid(@Query('code') code: string, @Req() req: Request) {
     const uuid = await this.codeService.getUuid(code);
