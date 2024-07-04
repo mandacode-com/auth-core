@@ -37,6 +37,7 @@ async function bootstrap() {
     // Secure cookie options
     cookieOptions = {
       secure: true,
+      domain: cookieConfig.domain,
       maxAge: sessionConfig.timeout,
       sameSite: 'lax',
       priority: 'high',

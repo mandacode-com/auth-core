@@ -3,7 +3,7 @@ import { tags } from 'typia';
 export interface IConfig {
   nodeEnv: string & tags.Enum<'development' | 'production' | 'test'>;
   port: number;
-  corsOrigin: string;
+  corsOrigin: string | RegExp | boolean;
   cookie: ICookieConfig;
   session: ISessionConfig;
   redis: IRedisConfig;
@@ -11,6 +11,7 @@ export interface IConfig {
 }
 
 export interface ICookieConfig {
+  domain: string;
   secret: string;
 }
 
