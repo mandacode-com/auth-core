@@ -10,14 +10,17 @@ import {
 } from '@prisma/client';
 import { SigninService } from './signin.service';
 import * as bcrypt from 'bcrypt';
+import { PinoLogger } from 'nestjs-pino';
 
 describe('SignupService', () => {
   let service: SigninService;
   let prismaMock: DeepMockProxy<PrismaClient>;
+  let logger: DeepMockProxy<PinoLogger>;
 
   beforeEach(async () => {
     // Mock PrismaService
     prismaMock = mockDeep<PrismaClient>();
+    logger = mockDeep<PinoLogger>();
 
     // Create testing module
     const module: TestingModule = await Test.createTestingModule({
@@ -26,6 +29,10 @@ describe('SignupService', () => {
         {
           provide: PrismaService,
           useValue: prismaMock,
+        },
+        {
+          provide: PinoLogger,
+          useValue: logger,
         },
       ],
     }).compile();
