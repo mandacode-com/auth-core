@@ -88,7 +88,7 @@ async function bootstrap() {
   app.use(
     session({
       name: sessionConfig.name,
-      secret: sessionConfig.secret,
+      secret: cookieConfig.secret,
       resave: false,
       rolling: true,
       saveUninitialized: false,
