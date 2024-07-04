@@ -88,6 +88,7 @@ async function bootstrap() {
   app.use(
     session({
       name: sessionConfig.name,
+      proxy: config.get('nodeEnv') === 'production',
       secret: cookieConfig.secret,
       resave: false,
       rolling: true,
