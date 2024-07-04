@@ -18,6 +18,7 @@ import pino from 'pino';
         stream: pino.destination({
           dest: 'logs/app.log',
           sync: false,
+          mkdir: true,
         }),
       },
     }),

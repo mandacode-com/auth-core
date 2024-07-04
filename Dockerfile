@@ -13,12 +13,10 @@ RUN npm install -y && \
 FROM node:22-alpine as deploy
 
 WORKDIR /app
-RUN rm -rf ./* && \
-  mkdir -p ./logs
+RUN rm -rf ./*
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./
 COPY --from=build /app/tsconfig.json ./
-COPY --from=build /app/.env ./
 
 ENTRYPOINT ["npm", "start"]
