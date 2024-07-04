@@ -27,25 +27,9 @@ async function bootstrap() {
   const cookieConfig = config.get<ICookieConfig>('cookie');
   const redisConfig = config.get<IRedisConfig>('redis');
 
-  // Session configuration
+  // Configure cookie options
   let cookieOptions: session.CookieOptions = {};
-  let sessionStore: session.Store | undefined;
   if (config.get('nodeEnv') === 'production') {
-    // Redis session store
-    const redisClient = await createClient({
-      url: redisConfig.url,
-    })
-      .connect()
-      .catch((error) => {
-        logger.error('Failed to connect to Redis');
-        throw error;
-      });
-
-    // Create a Redis session store
-    sessionStore = new RedisStore({
-      client: redisClient,
-    });
-
     // Secure cookie options
     cookieOptions = {
       secure: true,
@@ -53,14 +37,24 @@ async function bootstrap() {
       sameSite: 'lax',
       priority: 'high',
     };
-  } else if (config.get('nodeEnv') === 'development') {
+  } else if (
+    config.get('nodeEnv') === 'development' ||
+    config.get('nodeEnv') === 'test'
+  ) {
     // Insecure cookie options
     cookieOptions = {
       secure: false,
       priority: 'high',
       maxAge: sessionConfig.timeout,
     };
-  } else if (config.get('nodeEnv') === 'test') {
+  }
+
+  // Create a session store
+  let sessionStore: session.Store | undefined;
+  if (
+    config.get('nodeEnv') === 'production' ||
+    config.get('nodeEnv') === 'test'
+  ) {
     // Redis session store
     const redisClient = await createClient({
       url: redisConfig.url,
@@ -75,13 +69,14 @@ async function bootstrap() {
     sessionStore = new RedisStore({
       client: redisClient,
     });
+  }
 
-    // Insecure cookie options
-    cookieOptions = {
-      secure: false,
-      priority: 'high',
-      maxAge: sessionConfig.timeout,
-    };
+  // enable cors
+  if (config.get('nodeEnv') === 'production') {
+    app.enableCors({
+      origin: config.get('corsOrigin'),
+      credentials: true,
+    });
   }
 
   // Add session middleware
