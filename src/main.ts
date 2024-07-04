@@ -14,6 +14,7 @@ import { Logger } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { PrismaExceptionFilter } from './filters/prismaException.filter';
 import { HttpExceptionFilter } from './filters/httpException.filter';
+import helmet from 'helmet';
 
 async function bootstrap() {
   // Create App instance
@@ -22,6 +23,9 @@ async function bootstrap() {
   });
   const logger = new Logger();
   const config = app.get(ConfigService<IConfig, true>);
+
+  // Secure setup
+  app.use(helmet());
 
   const sessionConfig = config.get<ISessionConfig>('session');
   const cookieConfig = config.get<ICookieConfig>('cookie');
@@ -75,6 +79,7 @@ async function bootstrap() {
   if (config.get('nodeEnv') === 'production') {
     app.enableCors({
       origin: config.get('corsOrigin'),
+      methods: ['GET', 'POST'],
       credentials: true,
     });
   }
