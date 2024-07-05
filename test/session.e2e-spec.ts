@@ -8,7 +8,7 @@ import request from 'supertest';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 
-describe('Issue', () => {
+describe('Session', () => {
   let app: INestApplication;
   let cacheManager: Cache;
 
@@ -43,6 +43,18 @@ describe('Issue', () => {
     it('should return 200', async () => {
       cacheManager.get = jest.fn().mockResolvedValue('uuid');
       const response = await request(app.getHttpServer()).get('/session/issue');
+      expect(response.status).toEqual(200);
+    });
+  });
+
+  describe('[GET] /session/destroy', () => {
+    beforeEach(() => {
+      redisClient.set('sid', 'uuid');
+    });
+    it('should return 200', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/session/destroy')
+        .set('Cookie', 'sid=s%3Auuid');
       expect(response.status).toEqual(200);
     });
   });

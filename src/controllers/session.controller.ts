@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  InternalServerErrorException,
   NotFoundException,
   Query,
   Req,
@@ -21,6 +22,17 @@ export class SessionController {
       throw new NotFoundException('Code not found');
     }
     req.session.uuid = uuid;
+    return 'success';
+  }
+
+  @Get('destroy')
+  @HttpCode(200)
+  async logout(@Req() req: Request) {
+    req.session.destroy((err) => {
+      if (err) {
+        throw new InternalServerErrorException('Failed to logout');
+      }
+    });
     return 'success';
   }
 }
