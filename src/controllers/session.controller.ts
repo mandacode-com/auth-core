@@ -6,6 +6,7 @@ import {
   NotFoundException,
   Query,
   Req,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { CodeService } from 'src/services/code.service';
@@ -34,5 +35,14 @@ export class SessionController {
       }
     });
     return 'success';
+  }
+
+  @Get('check')
+  @HttpCode(200)
+  async check(@Req() req: Request) {
+    if (req.session.uuid) {
+      return 'valid';
+    }
+    throw new UnauthorizedException('Invalid session');
   }
 }

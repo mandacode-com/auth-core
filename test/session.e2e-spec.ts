@@ -11,6 +11,7 @@ import { Cache } from 'cache-manager';
 describe('Session', () => {
   let app: INestApplication;
   let cacheManager: Cache;
+  const secret = 'secret';
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -20,7 +21,7 @@ describe('Session', () => {
     app = module.createNestApplication();
     app.use(
       session({
-        secret: 'secret',
+        secret,
         resave: false,
         saveUninitialized: false,
         cookie: {},
@@ -48,13 +49,10 @@ describe('Session', () => {
   });
 
   describe('[GET] /session/destroy', () => {
-    beforeEach(() => {
-      redisClient.set('sid', 'uuid');
-    });
     it('should return 200', async () => {
       const response = await request(app.getHttpServer())
         .get('/session/destroy')
-        .set('Cookie', 'sid=s%3Auuid');
+        .set('Cookie', 'SID=sid');
       expect(response.status).toEqual(200);
     });
   });
