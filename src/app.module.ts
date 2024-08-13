@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { validate } from './config/validate';
-import { AuthModule } from './modules/auth.module';
-import { AppController } from './controllers/app.controller';
+import { SessionModule } from './modules/session.module';
 import { LoggerModule } from 'nestjs-pino';
 import pino from 'pino';
+import { LocalModule } from './modules/local.module';
 import { CacheModule } from '@nestjs/cache-manager';
-import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -14,12 +13,13 @@ import { JwtModule } from '@nestjs/jwt';
       validate: validate,
       isGlobal: true,
     }),
-    AuthModule,
-    JwtModule.register({
-      signOptions: { expiresIn: '1d' },
-      secret: process.env.JWT_SECRET,
-      global: true,
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 30000,
+      max: 1000,
     }),
+    LocalModule,
+    SessionModule,
     LoggerModule.forRoot({
       pinoHttp: {
         stream: pino.destination({
@@ -29,12 +29,6 @@ import { JwtModule } from '@nestjs/jwt';
         }),
       },
     }),
-    CacheModule.register({
-      isGlobal: true,
-      ttl: 30000,
-      max: 1000,
-    }),
   ],
-  controllers: [AppController],
 })
 export class AppModule {}

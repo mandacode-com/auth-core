@@ -3,9 +3,9 @@ import { SigninService } from 'src/services/signin.service';
 import { SignupService } from 'src/services/signup.service';
 import { LocalController } from 'src/controllers/local.controller';
 import { PrismaService } from 'src/services/prisma.service';
-import { CodeService } from 'src/services/code.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { SessionController } from 'src/controllers/session.controller';
+import { JwtModule } from '@nestjs/jwt';
+import { CodeService } from 'src/services/code.service';
 
 @Module({
   imports: [
@@ -15,8 +15,13 @@ import { SessionController } from 'src/controllers/session.controller';
         transport: Transport.TCP,
       },
     ]),
+    JwtModule.register({
+      signOptions: { expiresIn: '1d' },
+      secret: process.env.JWT_SECRET,
+      global: true,
+    }),
   ],
-  controllers: [LocalController, SessionController],
+  controllers: [LocalController],
   providers: [SigninService, SignupService, PrismaService, CodeService],
 })
-export class AuthModule {}
+export class LocalModule {}
