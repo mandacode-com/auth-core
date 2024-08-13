@@ -1,4 +1,10 @@
-import { member, password, provider } from '@prisma/client';
+import {
+  member,
+  password,
+  provider,
+  temp_member,
+  temp_member_info,
+} from '@prisma/client';
 import {
   PostgreSqlContainer,
   StartedPostgreSqlContainer,
@@ -58,11 +64,13 @@ afterAll(async () => {
   await redisContainer.stop();
 });
 
-afterEach(async () => {
+beforeEach(async () => {
   await postgresClient.query('DELETE FROM "member"."member"');
   await postgresClient.query('DELETE FROM "member"."profile"');
   await postgresClient.query('DELETE FROM "auth"."provider"');
   await postgresClient.query('DELETE FROM "auth"."password"');
+  await postgresClient.query('DELETE FROM "temp_member"."temp_member_info"');
+  await postgresClient.query('DELETE FROM "temp_member"."temp_member"');
 });
 
 jest.setTimeout(10000);
@@ -82,4 +90,19 @@ const createTestMember = async (email: string, password: string) => {
   );
 };
 
-export { createTestMember };
+const createTempTestMember = async (
+  code: string,
+  nickname: string,
+  email: string,
+  password: string,
+) => {
+  const hashedPassword = bcrypt.hashSync(password, 10);
+  const tempMember = await postgresClient.query<temp_member>(
+    `INSERT INTO "temp_member"."temp_member" (code) VALUES ('${code}') RETURNING id`,
+  );
+  await postgresClient.query<temp_member_info>(
+    `INSERT INTO "temp_member"."temp_member_info" (temp_member_id, nickname, email, password) VALUES ('${tempMember.rows[0].id}', '${nickname}', '${email}', '${hashedPassword}')`,
+  );
+};
+
+export { createTestMember, createTempTestMember };

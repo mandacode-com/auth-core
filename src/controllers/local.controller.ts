@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpException,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypiaValidationPipe } from 'src/pipes/validation.pipe';
@@ -26,6 +28,15 @@ export class LocalController {
     private configService: ConfigService<IConfig, true>,
   ) {}
 
+  @Get('confirm')
+  @HttpCode(200)
+  async confirm(@Query('token') token: string) {
+    await this.signupService.confirm(token);
+    return {
+      message: 'success',
+    };
+  }
+
   @Post('signup')
   @HttpCode(201)
   async signup(
@@ -34,15 +45,12 @@ export class LocalController {
     if (this.configService.get<IStatusConfig>('status').localSignup === false) {
       throw new HttpException('Local signup is disabled', 423);
     }
-    const user = await this.signupService.signup(
+    const token = await this.signupService.signup(
       body.email,
       body.password,
       body.nickname,
     );
-    const code = await this.codeService.genCode(user.uuid_key);
-    return {
-      code,
-    };
+    return token;
   }
 
   @Post('signin')

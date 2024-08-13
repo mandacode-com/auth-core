@@ -6,6 +6,7 @@ import { AppController } from './controllers/app.controller';
 import { LoggerModule } from 'nestjs-pino';
 import pino from 'pino';
 import { CacheModule } from '@nestjs/cache-manager';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -14,6 +15,11 @@ import { CacheModule } from '@nestjs/cache-manager';
       isGlobal: true,
     }),
     AuthModule,
+    JwtModule.register({
+      signOptions: { expiresIn: '1d' },
+      secret: process.env.JWT_SECRET,
+      global: true,
+    }),
     LoggerModule.forRoot({
       pinoHttp: {
         stream: pino.destination({

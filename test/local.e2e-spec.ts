@@ -1,21 +1,35 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PrismaService } from 'src/services/prisma.service';
-import { createTestMember, prismaService, redisClient } from './setup-e2e';
+import {
+  createTempTestMember,
+  createTestMember,
+  prismaService,
+  redisClient,
+} from './setup-e2e';
 import request from 'supertest';
 import session from 'express-session';
 import RedisStore from 'connect-redis';
 import { AppModule } from 'src/app.module';
+import { JwtService } from '@nestjs/jwt';
+import { randomBytes } from 'crypto';
 
 describe('Local', () => {
   let app: INestApplication;
+  let jwtService: JwtService;
 
   beforeAll(async () => {
+    jwtService = new JwtService({
+      secret: 'secret',
+    });
+
     const module = await Test.createTestingModule({
       imports: [AppModule],
     })
       .overrideProvider(PrismaService)
       .useValue(prismaService)
+      .overrideProvider(JwtService)
+      .useValue(jwtService)
       .compile();
 
     app = module.createNestApplication();
@@ -47,6 +61,26 @@ describe('Local', () => {
         .send({ email, password, nickname });
 
       expect(response.status).toEqual(201);
+    });
+  });
+
+  describe('[GET] /local/confirm', () => {
+    const email = 'email@ifelfi.com';
+    const password = 'password';
+    const nickname = 'nickname';
+    const code = randomBytes(8).toString('hex');
+    let token: string;
+    beforeEach(() => {
+      token = jwtService.sign({ email, code: code });
+      createTempTestMember(code, nickname, email, password);
+    });
+
+    it('should confirm', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/local/confirm')
+        .query({ token });
+
+      expect(response.status).toEqual(200);
     });
   });
 
