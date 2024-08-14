@@ -40,6 +40,7 @@ export function validate(raw: Record<string, unknown>) {
       host: raw.AUTO_MAILER_HOST as string,
       port: parseInt(raw.AUTO_MAILER_PORT as string),
     },
+    linkUrlPrefix: raw.LINK_URL_PREFIX as string,
   };
   const result = validateConfig(config);
   if (result.success) {

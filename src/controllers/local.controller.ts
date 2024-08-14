@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientProxy } from '@nestjs/microservices';
+import { PinoLogger } from 'nestjs-pino';
 import { TypiaValidationPipe } from 'src/pipes/validation.pipe';
 import { CodeService } from 'src/services/code.service';
 import { SigninService } from 'src/services/signin.service';
@@ -28,6 +29,7 @@ export class LocalController {
     private signupService: SignupService,
     private codeService: CodeService,
     private configService: ConfigService<IConfig, true>,
+    private logger: PinoLogger,
     @Inject('AUTO_MAILER') private autoMailerClient: ClientProxy,
   ) {}
 
@@ -58,14 +60,20 @@ export class LocalController {
       body.nickname,
     );
     const link = `http://localhost:3000/local/confirm?token=${token}`;
-    const req = `{
-      "cmd": "confirmEmail",
-      "data": "{
-        "email": "${body.email}",
-        "link": "${link}",
-      }"
-    }`;
-    const res = this.autoMailerClient.send('', req);
+    const obs = this.autoMailerClient.send(
+      { cmd: 'confirm_email' },
+      { email: body.email, link },
+    );
+
+    obs.subscribe({
+      next: () => {
+        this.logger.info(`Email sent to ${body.email}`);
+      },
+      error: (error) => {
+        this.logger.error(`Failed to send email to ${body.email}`);
+        this.logger.error(error);
+      },
+    });
 
     return token;
   }
