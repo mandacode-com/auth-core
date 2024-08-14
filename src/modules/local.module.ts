@@ -13,6 +13,10 @@ import { CodeService } from 'src/services/code.service';
       {
         name: 'AUTO_MAILER',
         transport: Transport.TCP,
+        options: {
+          host: process.env.AUTO_MAILER_HOST,
+          port: parseInt(process.env.AUTO_MAILER_PORT!),
+        },
       },
     ]),
     JwtModule.register({

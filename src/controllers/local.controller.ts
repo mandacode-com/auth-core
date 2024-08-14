@@ -4,10 +4,12 @@ import {
   Get,
   HttpCode,
   HttpException,
+  Inject,
   Post,
   Query,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ClientProxy } from '@nestjs/microservices';
 import { TypiaValidationPipe } from 'src/pipes/validation.pipe';
 import { CodeService } from 'src/services/code.service';
 import { SigninService } from 'src/services/signin.service';
@@ -26,7 +28,12 @@ export class LocalController {
     private signupService: SignupService,
     private codeService: CodeService,
     private configService: ConfigService<IConfig, true>,
+    @Inject('AUTO_MAILER') private autoMailerClient: ClientProxy,
   ) {}
+
+  onApplicationBootstrap() {
+    this.autoMailerClient.connect();
+  }
 
   @Get('confirm')
   @HttpCode(200)
@@ -50,6 +57,16 @@ export class LocalController {
       body.password,
       body.nickname,
     );
+    const link = `http://localhost:3000/local/confirm?token=${token}`;
+    const req = `{
+      "cmd": "confirmEmail",
+      "data": "{
+        "email": "${body.email}",
+        "link": "${link}",
+      }"
+    }`;
+    const res = this.autoMailerClient.send('', req);
+
     return token;
   }
 

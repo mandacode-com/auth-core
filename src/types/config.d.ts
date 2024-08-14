@@ -8,6 +8,7 @@ export interface IConfig {
   session: ISessionConfig;
   redis: IRedisConfig;
   status: IStatusConfig;
+  autoMailer: IAutoMailer;
 }
 
 export interface ICookieConfig {
@@ -27,4 +28,9 @@ export interface IRedisConfig {
 export interface IStatusConfig {
   localSignin: boolean;
   localSignup: boolean;
+}
+
+export interface IAutoMailer {
+  host: string;
+  port: number;
 }
