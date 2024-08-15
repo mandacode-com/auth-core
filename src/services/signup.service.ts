@@ -67,6 +67,11 @@ export class SignupService {
     return token;
   }
 
+  /**
+   * Resend the confirmation email
+   * @param email Email address
+   * @returns Confirmation token
+   */
   async resend(email: string) {
     const tempMemberInfo = await this.prisma.temp_member_info.findUnique({
       where: { email },
@@ -99,7 +104,15 @@ export class SignupService {
    * @param token Confirmation token
    */
   async confirm(token: string) {
-    const { email, code } = this.jwtService.verify<IToken>(token);
+    let email: string;
+    let code: string;
+    try {
+      const data = this.jwtService.verify(token) as IToken;
+      email = data.email;
+      code = data.code;
+    } catch (error) {
+      throw new BadRequestException('Invalid token');
+    }
     return await this.prisma.$transaction(async (tx) => {
       const tempMemberInfo = await tx.temp_member_info.findUnique({
         where: { email },
