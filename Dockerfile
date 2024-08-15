@@ -1,7 +1,7 @@
 FROM node:22-alpine as build
 
 LABEL title="ifauth-core"
-LABEL version="1.0.0"
+LABEL version="1.1.0"
 LABEL maintainer="ifelfi"
 
 WORKDIR /app
