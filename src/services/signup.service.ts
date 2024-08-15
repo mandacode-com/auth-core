@@ -67,6 +67,33 @@ export class SignupService {
     return token;
   }
 
+  async resend(email: string) {
+    const tempMemberInfo = await this.prisma.temp_member_info.findUnique({
+      where: { email },
+    });
+    if (!tempMemberInfo) {
+      throw new BadRequestException('Member not found');
+    }
+    const tempMember = await this.prisma.temp_member.findUnique({
+      where: { id: tempMemberInfo.temp_member_id },
+    });
+    if (!tempMember) {
+      throw new InternalServerErrorException('Temp member not found');
+    }
+
+    const newCode = await this.prisma.$transaction(async (tx) => {
+      await tx.temp_member.update({
+        where: { id: tempMember.id },
+        data: {
+          code: randomBytes(8).toString('hex'),
+        },
+      });
+      return tempMember.code;
+    });
+
+    return this.jwtService.sign({ email, code: newCode });
+  }
+
   /**
    * Verify the confirmation token
    * @param token Confirmation token

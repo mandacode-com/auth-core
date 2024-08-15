@@ -9,7 +9,7 @@ export interface IConfig {
   redis: IRedisConfig;
   status: IStatusConfig;
   autoMailer: IAutoMailer;
-  linkUrlPrefix: string;
+  linkUrl: ILinkUrl;
 }
 
 export interface ICookieConfig {
@@ -34,4 +34,8 @@ export interface IStatusConfig {
 export interface IAutoMailer {
   host: string;
   port: number;
+}
+
+export interface ILinkUrl {
+  confirmEmail: string;
 }
