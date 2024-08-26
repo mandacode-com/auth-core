@@ -1,22 +1,27 @@
-FROM node:22-alpine as build
+FROM node:22-alpine AS base
 
-LABEL title="ifauth-core"
-LABEL version="1.1.0"
-LABEL maintainer="ifelfi"
-
+FROM base AS deps
 WORKDIR /app
-COPY . ./
-RUN npm install -y && \
-  npm run build && \
-  npm prune --production
+COPY package.json package-lock.json ./
+COPY prisma ./prisma
+RUN \
+  if [ -f package-lock.json ]; then \
+  npm ci; \
+  npx prisma generate; \
+  npm prune --production; \
+  else \
+  echo "no package-lock.json found" && exit 1; \
+  fi
 
-FROM node:22-alpine as deploy
-
+FROM base AS builder
 WORKDIR /app
-RUN rm -rf ./*
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/package.json ./
-COPY --from=build /app/tsconfig.json ./
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build
 
-ENTRYPOINT ["npm", "start"]
+FROM base AS release
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=deps /app/node_modules ./node_modules
+
+CMD node dist/main.js
