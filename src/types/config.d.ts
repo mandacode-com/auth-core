@@ -9,6 +9,7 @@ export interface IConfig {
   redis: IRedisConfig;
   status: IStatusConfig;
   autoMailer: IAutoMailer;
+  jwt: IJwtConfig;
   linkUrl: ILinkUrl;
 }
 
@@ -34,6 +35,10 @@ export interface IStatusConfig {
 export interface IAutoMailer {
   host: string;
   port: number;
+}
+
+export interface IJwtConfig {
+  secret: string;
 }
 
 export interface ILinkUrl {

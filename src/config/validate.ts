@@ -36,6 +36,9 @@ export function validate(raw: Record<string, unknown>) {
       localSignup: isTrue(raw.STATUS_LOCAL_SIGNUP as string),
       localSignin: isTrue(raw.STATUS_LOCAL_SIGNIN as string),
     },
+    jwt: {
+      secret: raw.JWT_SECRET as string,
+    },
     autoMailer: {
       host: raw.AUTO_MAILER_HOST as string,
       port: parseInt(raw.AUTO_MAILER_PORT as string),
