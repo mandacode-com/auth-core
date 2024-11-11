@@ -20,7 +20,7 @@ export function validate(raw: Record<string, unknown>) {
   const config: IConfig = {
     nodeEnv: (raw.NODE_ENV as string) || 'development',
     port: parseInt(raw.PORT as string) || 3000,
-    corsOrigin: new RegExp(raw.CORS_ORIGIN as string) || true,
+    corsOrigin: (raw.CORS_ORIGIN as string) || true,
     cookie: {
       domain: raw.COOKIE_DOMAIN as string,
       secret: raw.COOKIE_SECRET as string,
