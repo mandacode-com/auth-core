@@ -10,3 +10,8 @@ export interface ISignupBody {
   email: string & tags.Format<'email'>;
   password: string;
 }
+
+export interface IToken {
+  email: string;
+  code: string;
+}

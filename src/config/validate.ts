@@ -20,7 +20,9 @@ export function validate(raw: Record<string, unknown>) {
   const config: IConfig = {
     nodeEnv: (raw.NODE_ENV as string) || 'development',
     port: parseInt(raw.PORT as string) || 3000,
-    corsOrigin: new RegExp(raw.CORS_ORIGIN as string) || true,
+    cors: {
+      origin: new RegExp(raw.CORS_ORIGIN as string) || true,
+    },
     cookie: {
       domain: raw.COOKIE_DOMAIN as string,
       secret: raw.COOKIE_SECRET as string,
@@ -35,6 +37,16 @@ export function validate(raw: Record<string, unknown>) {
     status: {
       localSignup: isTrue(raw.STATUS_LOCAL_SIGNUP as string),
       localSignin: isTrue(raw.STATUS_LOCAL_SIGNIN as string),
+    },
+    jwt: {
+      secret: raw.JWT_SECRET as string,
+    },
+    autoMailer: {
+      host: raw.AUTO_MAILER_HOST as string,
+      port: parseInt(raw.AUTO_MAILER_PORT as string),
+    },
+    linkUrl: {
+      confirmEmail: raw.LINK_URL_CONFIRM_EMAIL as string,
     },
   };
   const result = validateConfig(config);

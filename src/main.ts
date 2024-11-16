@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import {
   IConfig,
   ICookieConfig,
+  ICorsConfig,
   IRedisConfig,
   ISessionConfig,
 } from './types/config';
@@ -79,7 +80,7 @@ async function bootstrap() {
   // enable cors
   if (config.get('nodeEnv') === 'production') {
     app.enableCors({
-      origin: config.get('corsOrigin'),
+      origin: config.get<ICorsConfig>('cors').origin,
       methods: ['GET', 'POST'],
       credentials: true,
     });

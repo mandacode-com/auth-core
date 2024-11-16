@@ -7,7 +7,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["auth", "member", "public"]
+  schemas  = ["auth", "member", "public", "temp_member"]
 }
 
 model auto_login_code {
@@ -52,13 +52,14 @@ model social_info {
 }
 
 model member {
-  id       Int       @id(map: "pk_users") @default(autoincrement())
-  uuid_key String    @unique(map: "uni_uuid_key") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email    String    @unique(map: "uni_email") @db.VarChar(256)
-  password password?
-  provider provider?
-  profile  profile?
-  ssid     ssid[]
+  id           Int            @id(map: "pk_users") @default(autoincrement())
+  uuid_key     String         @unique(map: "uni_uuid_key") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String         @unique(map: "uni_email") @db.VarChar(256)
+  password     password?
+  provider     provider?
+  member_grade member_grade[]
+  profile      profile?
+  ssid         ssid[]
 
   @@schema("member")
 }
@@ -87,9 +88,49 @@ model ssid {
   @@schema("member")
 }
 
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model member_grade {
+  id          Int        @id(map: "member_grade_pk") @default(autoincrement())
+  member_id   Int?
+  update_date DateTime?  @default(now()) @db.Timestamptz(6)
+  grade       grade_type @default(normal)
+  member      member?    @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "member_grade_member_id_fk")
+
+  @@schema("member")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model temp_member {
+  id               BigInt             @id(map: "temp_member_pk") @default(autoincrement())
+  code             String             @db.Char(16)
+  create_date      DateTime           @default(now()) @db.Timestamptz(6)
+  expiry_date      DateTime           @default(now()) @db.Timestamptz(6)
+  temp_member_info temp_member_info[]
+
+  @@schema("temp_member")
+}
+
+model temp_member_info {
+  id             BigInt      @id(map: "temp_member_info_pk") @default(autoincrement())
+  temp_member_id BigInt
+  nickname       String      @db.VarChar(32)
+  password       String      @db.VarChar(256)
+  email          String      @unique(map: "uni_temp_member_info_email") @db.VarChar(256)
+  temp_member    temp_member @relation(fields: [temp_member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "temp_member_info_temp_member_id_fk")
+
+  @@schema("temp_member")
+}
+
 enum provider_type {
   local
   google
+
+  @@schema("public")
+}
+
+enum grade_type {
+  admin
+  normal
 
   @@schema("public")
 }

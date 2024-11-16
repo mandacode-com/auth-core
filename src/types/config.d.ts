@@ -3,11 +3,18 @@ import { tags } from 'typia';
 export interface IConfig {
   nodeEnv: string & tags.Enum<'development' | 'production' | 'test'>;
   port: number;
-  corsOrigin: string | RegExp | boolean;
+  cors: ICorsConfig;
   cookie: ICookieConfig;
   session: ISessionConfig;
   redis: IRedisConfig;
   status: IStatusConfig;
+  autoMailer: IAutoMailer;
+  jwt: IJwtConfig;
+  linkUrl: ILinkUrl;
+}
+
+export interface ICorsConfig {
+  origin: string | RegExp | boolean;
 }
 
 export interface ICookieConfig {
@@ -27,4 +34,17 @@ export interface IRedisConfig {
 export interface IStatusConfig {
   localSignin: boolean;
   localSignup: boolean;
+}
+
+export interface IAutoMailer {
+  host: string;
+  port: number;
+}
+
+export interface IJwtConfig {
+  secret: string;
+}
+
+export interface ILinkUrl {
+  confirmEmail: string;
 }
