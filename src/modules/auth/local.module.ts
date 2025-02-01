@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
-import { SigninService } from 'src/services/signin.service';
-import { SignupService } from 'src/services/signup.service';
 import { LocalController } from 'src/controllers/local.controller';
 import { PrismaService } from 'src/services/prisma.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { JwtModule } from '@nestjs/jwt';
-import { CodeService } from 'src/services/code.service';
+import { AuthLocalService } from 'src/services/auth/local.service';
+import { PrismaModule } from '../prisma.module';
 
 @Module({
   imports: [
@@ -24,8 +23,9 @@ import { CodeService } from 'src/services/code.service';
       secret: process.env.JWT_SECRET,
       global: true,
     }),
+    PrismaModule,
   ],
   controllers: [LocalController],
-  providers: [SigninService, SignupService, PrismaService, CodeService],
+  providers: [AuthLocalService, PrismaService],
 })
-export class LocalModule {}
+export class AuthLocalModule {}
