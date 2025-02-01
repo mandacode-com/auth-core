@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const envSchema = z.object({
+export const configSchema = z.object({
   NODE_ENV: z
     .string()
     .nonempty()
@@ -32,10 +32,11 @@ export const envSchema = z.object({
     .boolean()
     .transform((x) => x.toString().toLowerCase() === 'true')
     .default(true),
-  JWT_SECRET: z.string().min(8).default('jwt_secret'),
+  EMAIL_CONFIRMATION_JWT_SECRET: z.string().min(8),
+  JWT_SECRET: z.string().min(8),
   AUTO_MAILER_HOST: z.string(),
   AUTO_MAILER_PORT: z.number(),
   CONFIRM_EMAIL_URL: z.string().url(),
 });
 
-export type Env = z.infer<typeof envSchema>;
+export type Config = z.infer<typeof configSchema>;
