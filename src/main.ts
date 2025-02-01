@@ -1,13 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
-import {
-  IConfig,
-  ICookieConfig,
-  ICorsConfig,
-  IRedisConfig,
-  ISessionConfig,
-} from './types/config';
 import session from 'express-session';
 import RedisStore from 'connect-redis';
 import { createClient } from 'redis';
@@ -16,6 +9,7 @@ import cookieParser from 'cookie-parser';
 import { PrismaExceptionFilter } from './filters/prismaException.filter';
 import { HttpExceptionFilter } from './filters/httpException.filter';
 import helmet from 'helmet';
+import { Config } from './schemas/config.schema';
 
 async function bootstrap() {
   // Create App instance
@@ -23,47 +17,43 @@ async function bootstrap() {
     logger: ['error', 'warn', 'log'],
   });
   const logger = new Logger();
-  const config = app.get(ConfigService<IConfig, true>);
+  const config = app.get(ConfigService<Config, true>);
 
   // Secure setup
   app.use(helmet());
 
-  const sessionConfig = config.get<ISessionConfig>('session');
-  const cookieConfig = config.get<ICookieConfig>('cookie');
-  const redisConfig = config.get<IRedisConfig>('redis');
-
   // Configure cookie options
   let cookieOptions: session.CookieOptions = {};
-  if (config.get('nodeEnv') === 'production') {
+  if (config.get('NODE_ENV') === 'production') {
     // Secure cookie options
     cookieOptions = {
       secure: true,
-      domain: cookieConfig.domain,
-      maxAge: sessionConfig.timeout,
+      domain: config.get('COOKIE_DOMAIN'),
+      maxAge: config.get('SESSION_TIMEOUT'),
       sameSite: 'lax',
       priority: 'high',
     };
   } else if (
-    config.get('nodeEnv') === 'development' ||
-    config.get('nodeEnv') === 'test'
+    config.get('NODE_ENV') === 'development' ||
+    config.get('NODE_ENV') === 'test'
   ) {
     // Insecure cookie options
     cookieOptions = {
       secure: false,
       priority: 'high',
-      maxAge: sessionConfig.timeout,
+      maxAge: config.get('SESSION_TIMEOUT'),
     };
   }
 
   // Create a session store
   let sessionStore: session.Store | undefined;
   if (
-    config.get('nodeEnv') === 'production' ||
-    config.get('nodeEnv') === 'test'
+    config.get('NODE_ENV') === 'development' ||
+    config.get('NODE_ENV') === 'test'
   ) {
     // Redis session store
     const redisClient = await createClient({
-      url: redisConfig.url,
+      url: config.get('SESSION_STORAGE_URL'),
     })
       .connect()
       .catch((error) => {
@@ -78,9 +68,9 @@ async function bootstrap() {
   }
 
   // enable cors
-  if (config.get('nodeEnv') === 'production') {
+  if (config.get('NODE_ENV') === 'production') {
     app.enableCors({
-      origin: config.get<ICorsConfig>('cors').origin,
+      origin: config.get('CORS_ORIGIN'),
       methods: ['GET', 'POST'],
       credentials: true,
     });
@@ -89,9 +79,9 @@ async function bootstrap() {
   // Add session middleware
   app.use(
     session({
-      name: sessionConfig.name,
-      proxy: config.get('nodeEnv') === 'production',
-      secret: cookieConfig.secret,
+      name: config.get('SESSION_NAME'),
+      proxy: config.get('NODE_ENV') === 'production',
+      secret: config.get('COOKIE_SECRET'),
       resave: false,
       rolling: true,
       saveUninitialized: false,
@@ -101,12 +91,12 @@ async function bootstrap() {
   );
 
   // Add cookie parser middleware
-  app.use(cookieParser(cookieConfig.secret));
+  app.use(cookieParser(config.get('COOKIE_SECRET')));
 
   // Implement global exception filter
   app.useGlobalFilters(new HttpExceptionFilter(), new PrismaExceptionFilter());
 
-  await app.listen(config.get<number>('port'));
+  await app.listen(config.get<number>('PORT'));
   logger.log(`Server is running on: ${await app.getUrl()}`);
 }
 bootstrap();
