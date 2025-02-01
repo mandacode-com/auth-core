@@ -4,7 +4,7 @@ import { validate } from './config/validate';
 import { SessionModule } from './modules/session.module';
 import { LoggerModule } from 'nestjs-pino';
 import pino from 'pino';
-import { LocalModule } from './modules/local.module';
+import { AuthLocalModule } from './modules/auth/local.module';
 import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
@@ -18,7 +18,7 @@ import { CacheModule } from '@nestjs/cache-manager';
       ttl: 30000,
       max: 1000,
     }),
-    LocalModule,
+    AuthLocalModule,
     SessionModule,
     LoggerModule.forRoot({
       pinoHttp: {
