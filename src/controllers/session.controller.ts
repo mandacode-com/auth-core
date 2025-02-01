@@ -4,45 +4,36 @@ import {
   HttpCode,
   InternalServerErrorException,
   NotFoundException,
-  Query,
   Req,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { CodeService } from 'src/services/code.service';
+import { ResponseData } from 'src/interfaces/response.interface';
 
 @Controller('session')
 export class SessionController {
-  constructor(private readonly codeService: CodeService) {}
+  constructor() {}
 
-  @Get('issue')
+  @Get('check')
   @HttpCode(200)
-  async getUuid(@Query('code') code: string, @Req() req: Request) {
-    const uuid = await this.codeService.getUuid(code);
-    if (!uuid) {
-      throw new NotFoundException('Code not found');
+  async getAccess(@Req() req: Request): Promise<ResponseData> {
+    if (req.session.refresh) {
+      return {
+        message: 'session is valid',
+      };
     }
-    req.session.uuid = uuid;
-    return 'success';
+    throw new NotFoundException('session not found');
   }
 
   @Get('destroy')
   @HttpCode(200)
-  async logout(@Req() req: Request) {
+  async logout(@Req() req: Request): Promise<ResponseData> {
     req.session.destroy((err) => {
       if (err) {
-        throw new InternalServerErrorException('Failed to logout');
+        throw new InternalServerErrorException('Failed to destroy session');
       }
     });
-    return 'success';
-  }
-
-  @Get('check')
-  @HttpCode(200)
-  async check(@Req() req: Request) {
-    if (req.session.uuid) {
-      return 'valid';
-    }
-    throw new UnauthorizedException('Invalid session');
+    return {
+      message: 'session destroyed',
+    };
   }
 }
