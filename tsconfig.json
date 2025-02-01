@@ -19,10 +19,6 @@
     "noFallthroughCasesInSwitch": false,
     "esModuleInterop": true,
     "moduleResolution": "Node",
-    "plugins": [
-      {
-        "transform": "typia/lib/transform"
-      }
-    ]
+    "plugins": []
   }
 }
