@@ -13,10 +13,13 @@ import { Config } from 'src/schemas/config.schema';
 
 @Injectable()
 export class TokenService {
+  private readonly tokenSecret: Config['jwt']['secret'];
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService<Config, true>,
-  ) {}
+  ) {
+    this.tokenSecret = this.configService.get<Config['jwt']>('jwt').secret;
+  }
 
   /**
    * @description Generate access token
@@ -29,7 +32,7 @@ export class TokenService {
     options?: JwtSignOptions,
   ): Promise<string> {
     return this.jwtService.signAsync(payload, {
-      secret: this.configService.get('JWT_SECRET'),
+      secret: this.tokenSecret.default,
       ...options,
     });
   }
@@ -46,7 +49,7 @@ export class TokenService {
   ): Promise<AccessTokenPayload> {
     return this.jwtService
       .verifyAsync<AccessTokenPayload>(accessToken, {
-        secret: this.configService.get('JWT_SECRET'),
+        secret: this.tokenSecret.default,
         ...options,
       })
       .then(async (payload) => {
@@ -67,7 +70,7 @@ export class TokenService {
     options?: JwtSignOptions,
   ): Promise<string> {
     return this.jwtService.signAsync(payload, {
-      secret: this.configService.get('JWT_SECRET'),
+      secret: this.tokenSecret.default,
       ...options,
     });
   }
@@ -84,7 +87,7 @@ export class TokenService {
   ): Promise<RefreshTokenPayload> {
     return this.jwtService
       .verifyAsync<RefreshTokenPayload>(refreshToken, {
-        secret: this.configService.get('JWT_SECRET'),
+        secret: this.tokenSecret.default,
         ...options,
       })
       .then(async (payload) => {
@@ -105,7 +108,7 @@ export class TokenService {
     options?: JwtSignOptions,
   ): Promise<string> {
     return this.jwtService.signAsync(payload, {
-      secret: this.configService.get('JWT_SECRET'),
+      secret: this.tokenSecret.default,
       ...options,
     });
   }
@@ -122,7 +125,7 @@ export class TokenService {
   ): Promise<EmailConfrimationTokenPayload> {
     return this.jwtService
       .verifyAsync<EmailConfrimationTokenPayload>(emailConfirmToken, {
-        secret: this.configService.get('JWT_SECRET'),
+        secret: this.tokenSecret.default,
         ...options,
       })
       .then(async (payload) => {

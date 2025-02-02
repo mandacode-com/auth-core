@@ -24,36 +24,34 @@ async function bootstrap() {
 
   // Configure cookie options
   let cookieOptions: session.CookieOptions = {};
-  if (config.get('NODE_ENV') === 'production') {
+  if (config.get<Config['server']>('server').nodeEnv === 'production') {
     // Secure cookie options
     cookieOptions = {
       secure: true,
-      domain: config.get('COOKIE_DOMAIN'),
-      maxAge: config.get('SESSION_TIMEOUT'),
+      domain: config.get<Config['cookie']>('cookie').domain,
       sameSite: 'lax',
       priority: 'high',
     };
   } else if (
-    config.get('NODE_ENV') === 'development' ||
-    config.get('NODE_ENV') === 'test'
+    config.get<Config['server']>('server').nodeEnv === 'development' ||
+    config.get<Config['server']>('server').nodeEnv === 'test'
   ) {
     // Insecure cookie options
     cookieOptions = {
       secure: false,
       priority: 'high',
-      maxAge: config.get('SESSION_TIMEOUT'),
     };
   }
 
   // Create a session store
   let sessionStore: session.Store | undefined;
   if (
-    config.get('NODE_ENV') === 'development' ||
-    config.get('NODE_ENV') === 'test'
+    config.get<Config['server']>('server').nodeEnv === 'development' ||
+    config.get<Config['server']>('server').nodeEnv === 'test'
   ) {
     // Redis session store
     const redisClient = await createClient({
-      url: config.get('SESSION_STORAGE_URL'),
+      url: config.get<Config['session']>('session').storageUrl,
     })
       .connect()
       .catch((error) => {
@@ -68,9 +66,9 @@ async function bootstrap() {
   }
 
   // enable cors
-  if (config.get('NODE_ENV') === 'production') {
+  if (config.get<Config['server']>('server').nodeEnv === 'production') {
     app.enableCors({
-      origin: config.get('CORS_ORIGIN'),
+      origin: config.get<Config['cors']>('cors').origin,
       methods: ['GET', 'POST'],
       credentials: true,
     });
@@ -79,9 +77,9 @@ async function bootstrap() {
   // Add session middleware
   app.use(
     session({
-      name: config.get('SESSION_NAME'),
-      proxy: config.get('NODE_ENV') === 'production',
-      secret: config.get('COOKIE_SECRET'),
+      name: config.get<Config['session']>('session').name,
+      proxy: config.get<Config['server']>('server').nodeEnv === 'production',
+      secret: config.get<Config['cookie']>('cookie').secret,
       resave: false,
       rolling: true,
       saveUninitialized: false,
@@ -91,12 +89,12 @@ async function bootstrap() {
   );
 
   // Add cookie parser middleware
-  app.use(cookieParser(config.get('COOKIE_SECRET')));
+  app.use(cookieParser(config.get<Config['cookie']>('cookie').secret));
 
   // Implement global exception filter
   app.useGlobalFilters(new HttpExceptionFilter(), new PrismaExceptionFilter());
 
-  await app.listen(config.get<number>('PORT'));
+  await app.listen(config.get<Config['server']>('server').port);
   logger.log(`Server is running on: ${await app.getUrl()}`);
 }
 bootstrap();

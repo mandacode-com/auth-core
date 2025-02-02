@@ -27,8 +27,7 @@ import { TokenService } from 'src/services/token.service';
 
 @Controller('local')
 export class LocalController {
-  private readonly localSignupStatus: boolean;
-  private readonly localSigninStatus: boolean;
+  private readonly serviceStatus: Config['status'];
 
   constructor(
     private readonly authLocalService: AuthLocalService,
@@ -37,8 +36,7 @@ export class LocalController {
     private readonly logger: PinoLogger,
     private readonly mailerService: MailerService,
   ) {
-    this.localSignupStatus = this.configService.get('STATUS_LOCAL_SIGNUP');
-    this.localSigninStatus = this.configService.get('STATUS_LOCAL_SIGNIN');
+    this.serviceStatus = this.configService.get<Config['status']>('status');
   }
 
   @Get('confirm')
@@ -77,7 +75,7 @@ export class LocalController {
   async signup(
     @Body(new ZodValidationPipe(signupBodySchema)) body: SignupBody,
   ): Promise<ResponseData> {
-    if (this.localSignupStatus === false) {
+    if (this.serviceStatus.localSignup === false) {
       throw new HttpException('Local signup is disabled', 423);
     }
     const token = await this.authLocalService.signup(
@@ -117,7 +115,7 @@ export class LocalController {
       accessToken: string;
     }>
   > {
-    if (this.localSigninStatus === false) {
+    if (this.serviceStatus.localSignin === false) {
       throw new HttpException('Local signin is disabled', 423);
     }
     const member = await this.authLocalService.signin(
