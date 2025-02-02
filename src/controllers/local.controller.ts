@@ -29,7 +29,6 @@ import { TokenService } from 'src/services/token.service';
 export class LocalController {
   private readonly localSignupStatus: boolean;
   private readonly localSigninStatus: boolean;
-  private readonly confirmEmailUrl: string;
 
   constructor(
     private readonly authLocalService: AuthLocalService,
@@ -40,7 +39,6 @@ export class LocalController {
   ) {
     this.localSignupStatus = this.configService.get('STATUS_LOCAL_SIGNUP');
     this.localSigninStatus = this.configService.get('STATUS_LOCAL_SIGNIN');
-    this.confirmEmailUrl = this.configService.get('CONFIRM_EMAIL_URL');
   }
 
   @Get('confirm')
