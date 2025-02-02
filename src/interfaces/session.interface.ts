@@ -1,7 +1,7 @@
-export interface ISession {
-  refresh: string;
-}
+import 'express-session';
 
 declare module 'express-session' {
-  interface SessionData extends ISession {}
+  interface SessionData {
+    refresh: string;
+  }
 }
