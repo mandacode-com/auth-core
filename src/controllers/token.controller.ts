@@ -1,4 +1,10 @@
-import { Controller, Get, HttpCode, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpCode,
+  NotFoundException,
+  Req,
+} from '@nestjs/common';
 import { Request } from 'express';
 import { ResponseData } from 'src/interfaces/response.interface';
 import { TokenService } from 'src/services/token.service';
@@ -17,9 +23,7 @@ export class TokenController {
     const refreshToken = req.session.refresh;
 
     if (!refreshToken) {
-      return {
-        message: 'refresh token not found',
-      };
+      throw new NotFoundException('refresh token not found');
     }
 
     // if refresh token is expired, it will refresh the token

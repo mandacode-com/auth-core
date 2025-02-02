@@ -4,13 +4,12 @@ import {
   Get,
   HttpCode,
   HttpException,
-  Inject,
+  InternalServerErrorException,
   Post,
   Query,
   Req,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ClientProxy } from '@nestjs/microservices';
 import { Request } from 'express';
 import { PinoLogger } from 'nestjs-pino';
 import { ResponseData } from 'src/interfaces/response.interface';
@@ -23,6 +22,7 @@ import {
 } from 'src/schemas/auth.schema';
 import { Config } from 'src/schemas/config.schema';
 import { AuthLocalService } from 'src/services/auth/local.service';
+import { MailerService } from 'src/services/mailer.service';
 import { TokenService } from 'src/services/token.service';
 
 @Controller('local')
@@ -36,15 +36,11 @@ export class LocalController {
     private readonly configService: ConfigService<Config, true>,
     private readonly tokenService: TokenService,
     private readonly logger: PinoLogger,
-    @Inject('AUTO_MAILER') private autoMailerClient: ClientProxy,
+    private readonly mailerService: MailerService,
   ) {
     this.localSignupStatus = this.configService.get('STATUS_LOCAL_SIGNUP');
     this.localSigninStatus = this.configService.get('STATUS_LOCAL_SIGNIN');
     this.confirmEmailUrl = this.configService.get('CONFIRM_EMAIL_URL');
-  }
-
-  onApplicationBootstrap() {
-    this.autoMailerClient.connect();
   }
 
   @Get('confirm')
@@ -60,25 +56,22 @@ export class LocalController {
   @HttpCode(200)
   async resend(@Query('email') email: string): Promise<ResponseData> {
     const token = await this.authLocalService.resend(email);
-    const link = `${this.confirmEmailUrl}?token=${token}`;
-    const obs = this.autoMailerClient.send(
-      { cmd: 'confirm_email' },
-      { email, link },
-    );
-
-    obs.subscribe({
-      next: () => {
-        this.logger.info(`Email sent to ${email}`);
-      },
-      error: (error) => {
-        this.logger.error(`Failed to send email to ${email}`);
-        this.logger.error(error);
-      },
+    return new Promise<ResponseData>((resolve, reject) => {
+      this.mailerService.sendEmailVerificationToken(email, token).subscribe({
+        next: () => {
+          this.logger.info(`Email sent to ${email}`);
+          resolve({
+            message: 'email sent',
+          });
+        },
+        error: (error) => {
+          this.logger.error(
+            `Failed to send email to ${email} with error: ${error}`,
+          );
+          reject(new InternalServerErrorException('Failed to send email'));
+        },
+      });
     });
-
-    return {
-      message: 'email sent',
-    };
   }
 
   @Post('signup')
@@ -94,25 +87,25 @@ export class LocalController {
       body.password,
       body.nickname,
     );
-    const link = `${this.confirmEmailUrl}?token=${token}`;
-    const obs = this.autoMailerClient.send(
-      { cmd: 'confirm_email' },
-      { email: body.email, link },
-    );
 
-    obs.subscribe({
-      next: () => {
-        this.logger.info(`Email sent to ${body.email}`);
-      },
-      error: (error) => {
-        this.logger.error(`Failed to send email to ${body.email}`);
-        this.logger.error(error);
-      },
+    return new Promise<ResponseData>((resolve, reject) => {
+      this.mailerService
+        .sendEmailVerificationToken(body.email, token)
+        .subscribe({
+          next: () => {
+            this.logger.info(`Email sent to ${body.email}`);
+            resolve({
+              message: 'success',
+            });
+          },
+          error: (error) => {
+            this.logger.error(
+              `Failed to send email to ${body.email} with error: ${error}`,
+            );
+            reject(new InternalServerErrorException('Failed to send email'));
+          },
+        });
     });
-
-    return {
-      message: 'email sent',
-    };
   }
 
   @Post('signin')
@@ -136,8 +129,6 @@ export class LocalController {
 
     // Issue access token and refresh token
     const [accessToken, refreshToken] = await Promise.all([
-      //this.jwtService.signAsync(accessTokenPayload),
-      //this.jwtService.signAsync(refreshTokenPayload, { expiresIn: '7d' }),
       this.tokenService.accessToken({
         uuid: member.uuid,
       }),
