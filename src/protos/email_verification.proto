@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package email_verification;
+
+service EmailVerificationService {
+  rpc SendEmailVerificationLink(VerifyEmailRequest) returns (VerifyEmailResponse);
+}
+
+message VerifyEmailRequest {
+  string email = 1;
+  string link = 2;
+}
+
+message VerifyEmailResponse { string message = 1; }
