@@ -7,16 +7,15 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma.service';
-import { JwtService } from '@nestjs/jwt';
 import { randomBytes } from 'crypto';
-import { EmailConfrimationTokenPayload } from 'src/interfaces/token.interface';
 import { PinoLogger } from 'nestjs-pino';
+import { TokenService } from '../token.service';
 
 @Injectable()
 export class AuthLocalService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly jwtService: JwtService,
+    private readonly tokenService: TokenService,
     private readonly logger: PinoLogger,
   ) {}
 
@@ -68,12 +67,10 @@ export class AuthLocalService {
       return { email, code: tempMember.code };
     });
 
-    const tokenData: EmailConfrimationTokenPayload = {
+    const token = this.tokenService.emailConfirmToken({
       email,
       code,
-    };
-
-    const token = this.jwtService.signAsync(tokenData, {});
+    });
 
     return token;
   }
@@ -110,7 +107,11 @@ export class AuthLocalService {
       return tempMember.code;
     });
 
-    return this.jwtService.sign({ email, code: newCode });
+    const token = this.tokenService.emailConfirmToken({
+      email,
+      code: newCode,
+    });
+    return token;
   }
 
   /**
@@ -127,9 +128,7 @@ export class AuthLocalService {
     uuid: string;
     email: string;
   }> {
-    const data = (await this.jwtService.verifyAsync(token).catch((_e) => {
-      throw new BadRequestException('Invalid token');
-    })) as EmailConfrimationTokenPayload;
+    const data = await this.tokenService.verifyEmailConfirmToken(token);
     return await this.prisma.$transaction(async (tx) => {
       const tempMemberInfo = await tx.temp_member_info.findUnique({
         where: { email: data.email },

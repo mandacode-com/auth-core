@@ -1,14 +1,22 @@
-import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService, JwtSignOptions, JwtVerifyOptions } from '@nestjs/jwt';
 import {
   AccessTokenPayload,
+  accessTokenPayloadSchema,
   EmailConfrimationTokenPayload,
+  emailConfrimationTokenPayloadSchema,
   RefreshTokenPayload,
-} from 'src/interfaces/token.interface';
+  refreshTokenPayloadSchema,
+} from 'src/schemas/token.schema';
+import { Config } from 'src/schemas/config.schema';
 
 @Injectable()
 export class TokenService {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService<Config, true>,
+  ) {}
 
   /**
    * @description Generate access token
@@ -16,8 +24,14 @@ export class TokenService {
    * @returns {Promise<string>}
    * @memberof TokenService
    */
-  async accessToken(payload: AccessTokenPayload): Promise<string> {
-    return this.jwtService.signAsync(payload);
+  async accessToken(
+    payload: AccessTokenPayload,
+    options?: JwtSignOptions,
+  ): Promise<string> {
+    return this.jwtService.signAsync(payload, {
+      secret: this.configService.get('JWT_SECRET'),
+      ...options,
+    });
   }
 
   /**
@@ -26,8 +40,20 @@ export class TokenService {
    * @returns {Promise<AccessTokenPayload>}
    * @memberof TokenService
    */
-  async verifyAccessToken(accessToken: string): Promise<AccessTokenPayload> {
-    return this.jwtService.verifyAsync<AccessTokenPayload>(accessToken);
+  async verifyAccessToken(
+    accessToken: string,
+    options?: JwtVerifyOptions,
+  ): Promise<AccessTokenPayload> {
+    return this.jwtService
+      .verifyAsync<AccessTokenPayload>(accessToken, {
+        secret: this.configService.get('JWT_SECRET'),
+        ...options,
+      })
+      .then(async (payload) => {
+        return accessTokenPayloadSchema.parseAsync(payload).catch(() => {
+          throw new BadRequestException('Invalid access token');
+        });
+      });
   }
 
   /**
@@ -36,8 +62,14 @@ export class TokenService {
    * @returns {Promise<string>}
    * @memberof TokenService
    */
-  async refreshToken(payload: RefreshTokenPayload): Promise<string> {
-    return this.jwtService.signAsync(payload);
+  async refreshToken(
+    payload: RefreshTokenPayload,
+    options?: JwtSignOptions,
+  ): Promise<string> {
+    return this.jwtService.signAsync(payload, {
+      secret: this.configService.get('JWT_SECRET'),
+      ...options,
+    });
   }
 
   /**
@@ -46,8 +78,20 @@ export class TokenService {
    * @returns {Promise<RefreshTokenPayload>}
    * @memberof TokenService
    */
-  async verifyRefreshToken(refreshToken: string): Promise<RefreshTokenPayload> {
-    return this.jwtService.verifyAsync(refreshToken);
+  async verifyRefreshToken(
+    refreshToken: string,
+    options?: JwtVerifyOptions,
+  ): Promise<RefreshTokenPayload> {
+    return this.jwtService
+      .verifyAsync<RefreshTokenPayload>(refreshToken, {
+        secret: this.configService.get('JWT_SECRET'),
+        ...options,
+      })
+      .then(async (payload) => {
+        return refreshTokenPayloadSchema.parseAsync(payload).catch(() => {
+          throw new BadRequestException('Invalid refresh token');
+        });
+      });
   }
 
   /**
@@ -58,8 +102,12 @@ export class TokenService {
    */
   async emailConfirmToken(
     payload: EmailConfrimationTokenPayload,
+    options?: JwtSignOptions,
   ): Promise<string> {
-    return this.jwtService.signAsync(payload);
+    return this.jwtService.signAsync(payload, {
+      secret: this.configService.get('JWT_SECRET'),
+      ...options,
+    });
   }
 
   /**
@@ -70,9 +118,19 @@ export class TokenService {
    */
   async verifyEmailConfirmToken(
     emailConfirmToken: string,
+    options?: JwtVerifyOptions,
   ): Promise<EmailConfrimationTokenPayload> {
-    return this.jwtService.verifyAsync<EmailConfrimationTokenPayload>(
-      emailConfirmToken,
-    );
+    return this.jwtService
+      .verifyAsync<EmailConfrimationTokenPayload>(emailConfirmToken, {
+        secret: this.configService.get('JWT_SECRET'),
+        ...options,
+      })
+      .then(async (payload) => {
+        return emailConfrimationTokenPayloadSchema
+          .parseAsync(payload)
+          .catch(() => {
+            throw new BadRequestException('Invalid email confirmation token');
+          });
+      });
   }
 }
