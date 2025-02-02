@@ -27,7 +27,7 @@ export class AuthLocalService {
    * @returns {Promise<string>}
    * @memberof SignupService
    * @throws {ConflictException} Email already exists
-   * @throws {ConflictException} Please confirm the email
+   * @throws {BadRequestException} Please confirm the email
    */
   async signup(
     email: string,
@@ -59,7 +59,7 @@ export class AuthLocalService {
         })
         .catch((e) => {
           if (e.code === 'P2002') {
-            throw new ConflictException('Please confirm the email');
+            throw new BadRequestException('Please confirm the email');
           }
           throw e;
         });
