@@ -10,12 +10,7 @@ export const configSchema = z.object({
     })
     .default('development'),
   PORT: z.number().int().positive().default(3000),
-  CORS_ORIGIN: z
-    .string()
-    .regex(
-      /^(?:\*|(?:https?|http):\/\/(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}(?::\d{2,5})?)$/,
-    )
-    .default('*'),
+  CORS_ORIGIN: z.string().default('*'),
   COOKIE_DOMAIN: z.string().default('localhost'),
   COOKIE_SECRET: z
     .string()
@@ -24,18 +19,11 @@ export const configSchema = z.object({
   SESSION_NAME: z.string().default('sid'),
   SESSION_TIMEOUT: z.number().int().positive().default(3600),
   SESSION_STORAGE_URL: z.string().default('redis://localhost:6379'),
-  STATUS_LOCAL_SIGNUP: z
-    .boolean()
-    .transform((x) => x.toString().toLowerCase() === 'true')
-    .default(true),
-  STATUS_LOCAL_SIGNIN: z
-    .boolean()
-    .transform((x) => x.toString().toLowerCase() === 'true')
-    .default(true),
+  STATUS_LOCAL_SIGNUP: z.boolean().default(true),
+  STATUS_LOCAL_SIGNIN: z.boolean().default(true),
   EMAIL_CONFIRMATION_JWT_SECRET: z.string().min(8),
   JWT_SECRET: z.string().min(8),
-  AUTO_MAILER_HOST: z.string(),
-  AUTO_MAILER_PORT: z.number(),
+  AUTO_MAILER_URL: z.string(),
   CONFIRM_EMAIL_URL: z.string().url(),
 });
 
