@@ -20,6 +20,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json --runInBand --detectOpenHandles"
   },
   "dependencies": {
+    "@grpc/grpc-js": "^1.12.5",
+    "@grpc/proto-loader": "^0.7.13",
     "@nestjs/cache-manager": "^2.2.2",
     "@nestjs/cli": "^10.0.0",
     "@nestjs/common": "^10.0.0",
@@ -58,7 +60,12 @@
     "@types/node": "^20.3.1",
     "@types/pg": "^8.11.6",
     "@types/supertest": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
     "cookie-signature": "^1.2.1",
+    "eslint": "^8.42.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
     "globals": "^15.14.0",
     "jest": "^29.5.0",
     "pg": "^8.12.0",
@@ -71,13 +78,9 @@
     "ts-loader": "^9.4.3",
     "ts-node": "^10.9.1",
     "ts-patch": "^3.2.1",
+    "ts-proto": "^2.6.1",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.4.2",
-    "@typescript-eslint/eslint-plugin": "^8.0.0",
-    "@typescript-eslint/parser": "^8.0.0",
-    "eslint": "^8.42.0",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-plugin-prettier": "^5.0.0"
+    "typescript": "^5.4.2"
   },
   "jest": {
     "moduleFileExtensions": [
