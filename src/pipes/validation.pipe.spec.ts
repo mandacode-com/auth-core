@@ -1,22 +1,8 @@
-import typia, { tags } from 'typia';
-import { TypiaValidationPipe } from './validation.pipe';
+import { ZodValidationPipe } from './validation.pipe';
 import { BadRequestException } from '@nestjs/common';
 
-interface ITest {
-  name: string & tags.Pattern<'^[a-zA-Z]+$'>;
-  age: number & tags.Type<'uint32'>;
-  email: string & tags.Format<'email'>;
-  bigId: bigint;
-}
-
-const validateTest = typia.createValidate<ITest>();
-
 describe('ValidationPipe', () => {
-  let pipe: TypiaValidationPipe;
-
-  beforeEach(() => {
-    pipe = new TypiaValidationPipe(validateTest);
-  });
+  let pipe: ZodValidationPipe;
 
   // Test if the pipe is defined
   it('should be defined', () => {
@@ -68,7 +54,7 @@ describe('ValidationPipe', () => {
       email: 'test@test.com',
       bigId: BigInt(1),
     };
-    const pipe = new TypiaValidationPipe(wrongValidator);
+    const pipe = new ZodValidationPipe(wrongValidator);
     try {
       await pipe.transform(data);
       expect(true).toBe(false);

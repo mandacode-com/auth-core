@@ -102,7 +102,7 @@ model member_grade {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model temp_member {
   id               BigInt             @id(map: "temp_member_pk") @default(autoincrement())
-  code             String             @db.Char(16)
+  code             String             @unique @db.Char(16)
   create_date      DateTime           @default(now()) @db.Timestamptz(6)
   expiry_date      DateTime           @default(now()) @db.Timestamptz(6)
   temp_member_info temp_member_info[]

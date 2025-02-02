@@ -1,5 +1,5 @@
 export interface ISession {
-  uuid: string;
+  refresh: string;
 }
 
 declare module 'express-session' {
