@@ -42,15 +42,15 @@ export const configSchema = z.object({
     expiresIn: z.object({
       access: z
         .string()
-        .regex(/^\d+[smhd]$/)
+        .regex(/^\d+[smhdy]$/)
         .default('15m'),
       refresh: z
         .string()
-        .regex(/^\d+[smhd]$/)
+        .regex(/^\d+[smhdy]$/)
         .default('30d'),
       emailConfirmation: z
         .string()
-        .regex(/^\d+[smhd]$/)
+        .regex(/^\d+[smhdy]$/)
         .default('30d'),
     }),
   }),
