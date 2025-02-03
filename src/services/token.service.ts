@@ -124,6 +124,7 @@ export class TokenService {
    * @param {string} emailConfirmToken
    * @returns {Promise<EmailConfrimationTokenPayload>}
    * @memberof TokenService
+   * @throws {BadRequestException} Invalid email confirmation token
    */
   async verifyEmailConfirmToken(
     emailConfirmToken: string,
