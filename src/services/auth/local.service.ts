@@ -8,7 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma.service';
 import { randomBytes } from 'crypto';
 import { TokenService } from '../token.service';
-import { provider_type } from '@prisma/client';
+import { GradeType, ProviderType } from '@prisma/client';
 
 @Injectable()
 export class AuthLocalService {
@@ -41,15 +41,22 @@ export class AuthLocalService {
     if (existingMember) {
       throw new ConflictException('Email already exists');
     }
-    const tempMember = await this.prisma.temp_member
+    const tempMember = await this.prisma.tempMember
       .create({
+        select: {
+          emailVerification: {
+            select: {
+              code: true,
+            },
+          },
+        },
         data: {
-          code: randomBytes(8).toString('hex'),
-          temp_member_info: {
+          email,
+          nickname: modifiedNickname,
+          password: hashedPassword,
+          emailVerification: {
             create: {
-              email,
-              password: hashedPassword,
-              nickname: modifiedNickname,
+              code: randomBytes(8).toString('hex'),
             },
           },
         },
@@ -63,7 +70,7 @@ export class AuthLocalService {
 
     const token = this.tokenService.emailConfirmToken({
       email,
-      code: tempMember.code,
+      code: tempMember.emailVerification.code,
     });
 
     return token;
@@ -77,34 +84,30 @@ export class AuthLocalService {
    * @throws {BadRequestException} Member not found
    */
   async resend(email: string): Promise<string> {
-    const tempMember = await this.prisma.temp_member_info.findUnique({
+    const updatedTempMember = await this.prisma.tempMember.update({
       select: {
-        temp_member: {
+        email: true,
+        emailVerification: {
           select: {
-            id: true,
             code: true,
           },
         },
       },
-      where: { email },
-    });
-    if (!tempMember) {
-      throw new BadRequestException('Member not found');
-    }
-
-    const newCode = await this.prisma.$transaction(async (tx) => {
-      await tx.temp_member.update({
-        where: { id: tempMember.temp_member.id },
-        data: {
-          code: randomBytes(8).toString('hex'),
+      where: {
+        email,
+      },
+      data: {
+        emailVerification: {
+          update: {
+            code: randomBytes(8).toString('hex'),
+          },
         },
-      });
-      return tempMember.temp_member.code;
+      },
     });
 
     const token = this.tokenService.emailConfirmToken({
       email,
-      code: newCode,
+      code: updatedTempMember.emailVerification.code,
     });
     return token;
   }
@@ -116,30 +119,40 @@ export class AuthLocalService {
    * @memberof SignupService
    * @throws {BadRequestException} Invalid token
    * @throws {BadRequestException} Member not found
-   * @throws {InternalServerErrorException} Temp member not found
    * @throws {BadRequestException} Code does not match
    */
   async confirm(token: string): Promise<{
     uuid: string;
     email: string;
   }> {
-    const data = await this.tokenService.verifyEmailConfirmToken(token);
-    const tempMember = await this.prisma.temp_member_info.findUniqueOrThrow({
+    const data = await this.tokenService
+      .verifyEmailConfirmToken(token)
+      .catch(() => {
+        throw new BadRequestException('Invalid token');
+      });
+    const tempMember = await this.prisma.tempMember.findUnique({
       select: {
+        id: true,
         email: true,
-        nickname: true,
         password: true,
-        temp_member: {
+        nickname: true,
+        emailVerification: {
           select: {
-            id: true,
             code: true,
           },
         },
       },
-      where: { email: data.email },
+      where: {
+        email: data.email,
+      },
     });
-    if (tempMember.temp_member.code !== data.code) {
-      throw new BadRequestException(`Code does not match`);
+
+    if (!tempMember) {
+      throw new BadRequestException('Member not found');
+    }
+
+    if (tempMember.emailVerification.code !== data.code) {
+      throw new BadRequestException('Code does not match');
     }
 
     const [createdMember, _deleteTemporaryMember] =
@@ -154,7 +167,7 @@ export class AuthLocalService {
             },
             provider: {
               create: {
-                provider: 'local',
+                provider: ProviderType.LOCAL,
               },
             },
             profile: {
@@ -162,15 +175,20 @@ export class AuthLocalService {
                 nickname: tempMember.nickname,
               },
             },
+            memberGrade: {
+              create: {
+                grade: GradeType.NORMAL,
+              },
+            },
           },
         }),
-        this.prisma.temp_member.delete({
-          where: { id: tempMember.temp_member.id },
+        this.prisma.tempMember.delete({
+          where: { id: tempMember.id },
         }),
       ]);
 
     return {
-      uuid: createdMember.uuid_key,
+      uuid: createdMember.uuidKey,
       email: createdMember.email,
     };
   }
@@ -192,33 +210,37 @@ export class AuthLocalService {
     uuid: string;
     email: string;
   }> {
-    const member = await this.prisma.member
-      .findUniqueOrThrow({
-        select: {
-          provider: {
-            select: {
-              provider: true,
-            },
+    const member = await this.prisma.member.findUnique({
+      select: {
+        provider: {
+          select: {
+            provider: true,
           },
-          password: {
-            select: {
-              password: true,
-            },
+        },
+        password: {
+          select: {
+            password: true,
           },
-          uuid_key: true,
-          email: true,
         },
-        where: {
-          email,
-        },
-      })
-      .catch(() => {
-        throw new UnauthorizedException('Email or password is incorrect.');
-      });
+        uuidKey: true,
+        email: true,
+      },
+      where: {
+        email,
+      },
+    });
 
-    if (member.provider?.provider !== provider_type.local) {
+    // Check if the member exists
+    if (!member) {
+      throw new UnauthorizedException('Email or password is incorrect.');
+    }
+
+    // Check if the provider is local
+    if (member.provider?.provider !== ProviderType.LOCAL) {
       throw new BadRequestException('This method is not allowed. Use OAuth2.');
     }
+
+    // Check if the password correct
     const comparePasswordResult = await bcrypt.compare(
       password,
       member.password?.password || '',
@@ -228,7 +250,7 @@ export class AuthLocalService {
     }
 
     return {
-      uuid: member.uuid_key,
+      uuid: member.uuidKey,
       email: member.email,
     };
   }
