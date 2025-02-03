@@ -2,7 +2,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import session from 'express-session';
-import RedisStore from 'connect-redis';
 import { createClient } from 'redis';
 import { Logger } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
@@ -10,6 +9,7 @@ import { PrismaExceptionFilter } from './filters/prismaException.filter';
 import { HttpExceptionFilter } from './filters/httpException.filter';
 import helmet from 'helmet';
 import { Config } from './schemas/config.schema';
+import { RedisStore } from 'connect-redis';
 
 async function bootstrap() {
   // Create App instance
