@@ -1,8 +1,8 @@
 {
   "name": "mandacode-auth-core",
   "version": "0.1.0",
-  "description": "",
-  "author": "",
+  "description": "mandacode auth service core module",
+  "author": "sauce",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
