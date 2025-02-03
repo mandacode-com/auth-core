@@ -78,7 +78,7 @@ export class LocalController {
     if (this.serviceStatus.localSignup === false) {
       throw new HttpException('Local signup is disabled', 423);
     }
-    const token = await this.authLocalService.signup(
+    const token = await this.authLocalService.createTempMember(
       body.email,
       body.password,
       body.nickname,
@@ -94,11 +94,12 @@ export class LocalController {
               message: 'success',
             });
           },
-          error: (error) => {
+          error: async (error) => {
+            await this.authLocalService.deleteTempMember(body.email);
+            reject(new InternalServerErrorException('Failed to send email'));
             this.logger.error(
               `Failed to send email to ${body.email} with error: ${error}`,
             );
-            reject(new InternalServerErrorException('Failed to send email'));
           },
         });
     });
