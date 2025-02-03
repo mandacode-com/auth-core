@@ -34,8 +34,24 @@ export const configSchema = z.object({
   }),
   jwt: z.object({
     secret: z.object({
+      access: z.string().min(8),
+      refresh: z.string().min(8),
       emailConfirmation: z.string().min(8),
-      default: z.string().min(8),
+    }),
+    // Token expiration in seconds
+    expiresIn: z.object({
+      access: z
+        .string()
+        .regex(/^\d+[smhd]$/)
+        .default('15m'),
+      refresh: z
+        .string()
+        .regex(/^\d+[smhd]$/)
+        .default('30d'),
+      emailConfirmation: z
+        .string()
+        .regex(/^\d+[smhd]$/)
+        .default('30d'),
     }),
   }),
   mailer: z.object({
