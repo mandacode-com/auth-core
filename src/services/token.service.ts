@@ -14,11 +14,14 @@ import { Config } from 'src/schemas/config.schema';
 @Injectable()
 export class TokenService {
   private readonly tokenSecret: Config['jwt']['secret'];
+  private readonly tokenExpiresIn: Config['jwt']['expiresIn'];
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService<Config, true>,
   ) {
     this.tokenSecret = this.configService.get<Config['jwt']>('jwt').secret;
+    this.tokenExpiresIn =
+      this.configService.get<Config['jwt']>('jwt').expiresIn;
   }
 
   /**
@@ -32,7 +35,8 @@ export class TokenService {
     options?: JwtSignOptions,
   ): Promise<string> {
     return this.jwtService.signAsync(payload, {
-      secret: this.tokenSecret.default,
+      secret: this.tokenSecret.access,
+      expiresIn: this.tokenExpiresIn.access,
       ...options,
     });
   }
@@ -49,7 +53,7 @@ export class TokenService {
   ): Promise<AccessTokenPayload> {
     return this.jwtService
       .verifyAsync<AccessTokenPayload>(accessToken, {
-        secret: this.tokenSecret.default,
+        secret: this.tokenSecret.access,
         ...options,
       })
       .then(async (payload) => {
@@ -70,7 +74,8 @@ export class TokenService {
     options?: JwtSignOptions,
   ): Promise<string> {
     return this.jwtService.signAsync(payload, {
-      secret: this.tokenSecret.default,
+      secret: this.tokenSecret.refresh,
+      expiresIn: this.tokenExpiresIn.refresh,
       ...options,
     });
   }
@@ -87,7 +92,7 @@ export class TokenService {
   ): Promise<RefreshTokenPayload> {
     return this.jwtService
       .verifyAsync<RefreshTokenPayload>(refreshToken, {
-        secret: this.tokenSecret.default,
+        secret: this.tokenSecret.refresh,
         ...options,
       })
       .then(async (payload) => {
@@ -108,7 +113,8 @@ export class TokenService {
     options?: JwtSignOptions,
   ): Promise<string> {
     return this.jwtService.signAsync(payload, {
-      secret: this.tokenSecret.default,
+      secret: this.tokenSecret.emailConfirmation,
+      expiresIn: this.tokenExpiresIn.emailConfirmation,
       ...options,
     });
   }
@@ -118,6 +124,7 @@ export class TokenService {
    * @param {string} emailConfirmToken
    * @returns {Promise<EmailConfrimationTokenPayload>}
    * @memberof TokenService
+   * @throws {BadRequestException} Invalid email confirmation token
    */
   async verifyEmailConfirmToken(
     emailConfirmToken: string,
@@ -125,7 +132,7 @@ export class TokenService {
   ): Promise<EmailConfrimationTokenPayload> {
     return this.jwtService
       .verifyAsync<EmailConfrimationTokenPayload>(emailConfirmToken, {
-        secret: this.tokenSecret.default,
+        secret: this.tokenSecret.emailConfirmation,
         ...options,
       })
       .then(async (payload) => {

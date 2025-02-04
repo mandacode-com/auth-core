@@ -6,6 +6,7 @@ import { LoggerModule } from 'nestjs-pino';
 import pino from 'pino';
 import { AuthLocalModule } from './modules/auth/local.module';
 import { CacheModule } from '@nestjs/cache-manager';
+import { TokenControllerModule } from './modules/token_controller.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { CacheModule } from '@nestjs/cache-manager';
       max: 1000,
     }),
     AuthLocalModule,
+    TokenControllerModule,
     SessionModule,
     LoggerModule.forRoot({
       pinoHttp: {

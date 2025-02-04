@@ -50,7 +50,7 @@ describe('local.service.spec.ts', () => {
         Promise.resolve(token),
       );
 
-      const result = await service.signup(
+      const result = await service.createTempMember(
         mockTempMember.email,
         mockTempMember.password,
         mockTempMember.nickname,

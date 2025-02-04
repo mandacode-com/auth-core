@@ -26,11 +26,18 @@ export class TokenController {
       throw new NotFoundException('refresh token not found');
     }
 
-    // if refresh token is expired, it will refresh the token
     const payload = await this.tokenService.verifyRefreshToken(refreshToken);
-    const accessToken = await this.tokenService.accessToken({
-      uuid: payload.uuid,
-    });
+
+    const [accessToken, newRefreshToken] = await Promise.all([
+      this.tokenService.accessToken({
+        uuid: payload.uuid,
+      }),
+      this.tokenService.refreshToken({
+        uuid: payload.uuid,
+      }),
+    ]);
+
+    req.session.refresh = newRefreshToken;
 
     return {
       message: 'success',

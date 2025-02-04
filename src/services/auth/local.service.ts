@@ -8,7 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma.service';
 import { randomBytes } from 'crypto';
 import { TokenService } from '../token.service';
-import { GradeType, ProviderType } from '@prisma/client';
+import { GradeType, ProviderType, TempMember } from '@prisma/client';
 
 @Injectable()
 export class AuthLocalService {
@@ -18,7 +18,7 @@ export class AuthLocalService {
   ) {}
 
   /**
-   * @description Create a new member
+   * @description Create a temporary member
    * @param {string} email Email address
    * @param {string} password Password
    * @param {string} [nickname] Nickname
@@ -27,7 +27,7 @@ export class AuthLocalService {
    * @throws {ConflictException} Email already exists
    * @throws {BadRequestException} Please confirm the email
    */
-  async signup(
+  async createTempMember(
     email: string,
     password: string,
     nickname?: string,
@@ -191,6 +191,20 @@ export class AuthLocalService {
       uuid: createdMember.uuidKey,
       email: createdMember.email,
     };
+  }
+
+  /**
+   * @description Delete the temporary member
+   * @param {string} email Email address
+   * @returns {Promise<void>}
+   * @memberof SignupService
+   */
+  async deleteTempMember(email: string): Promise<TempMember> {
+    return this.prisma.tempMember.delete({
+      where: {
+        email,
+      },
+    });
   }
 
   /**
