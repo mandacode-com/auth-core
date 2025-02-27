@@ -2,11 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { validate } from './config/validate';
 import { SessionModule } from './modules/session.module';
-import { LoggerModule } from 'nestjs-pino';
-import pino from 'pino';
 import { AuthLocalModule } from './modules/auth/local.module';
 import { CacheModule } from '@nestjs/cache-manager';
-import { TokenControllerModule } from './modules/token_controller.module';
+import { TokenModule } from './modules/token.module';
 
 @Module({
   imports: [
@@ -20,17 +18,8 @@ import { TokenControllerModule } from './modules/token_controller.module';
       max: 1000,
     }),
     AuthLocalModule,
-    TokenControllerModule,
     SessionModule,
-    LoggerModule.forRoot({
-      pinoHttp: {
-        stream: pino.destination({
-          dest: 'logs/app.log',
-          sync: false,
-          mkdir: true,
-        }),
-      },
-    }),
+    TokenModule,
   ],
 })
 export class AppModule {}

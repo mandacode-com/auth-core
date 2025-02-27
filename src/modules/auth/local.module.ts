@@ -3,10 +3,10 @@ import { LocalController } from 'src/controllers/auth/local.controller';
 import { AuthLocalService } from 'src/services/auth/local.service';
 import { PrismaModule } from '../prisma.module';
 import { MailerModule } from '../mailer.module';
-import { TokenModule } from '../token.module';
+import { TokenServiceModule } from '../token_service.module';
 
 @Module({
-  imports: [PrismaModule, MailerModule, TokenModule],
+  imports: [PrismaModule, MailerModule, TokenServiceModule],
   controllers: [LocalController],
   providers: [AuthLocalService],
 })
