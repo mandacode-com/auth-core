@@ -90,6 +90,7 @@ enum UserRole {
   SUPER @map("super")
   ADMIN @map("admin")
   USER  @map("user")
+  GUEST @map("guest")
 
   @@map("role")
   @@schema("public")
