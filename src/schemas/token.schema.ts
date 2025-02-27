@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { roleSchema } from './role.schema';
 
 export const emailConfrimationTokenPayloadSchema = z.object({
   email: z.string().email(),
@@ -7,10 +8,12 @@ export const emailConfrimationTokenPayloadSchema = z.object({
 
 export const accessTokenPayloadSchema = z.object({
   uuid: z.string().uuid(),
+  role: roleSchema,
 });
 
 export const refreshTokenPayloadSchema = z.object({
   uuid: z.string().uuid(),
+  role: roleSchema,
 });
 
 export type EmailConfrimationTokenPayload = z.infer<
