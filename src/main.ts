@@ -10,6 +10,7 @@ import { HttpExceptionFilter } from './filters/httpException.filter';
 import helmet from 'helmet';
 import { Config } from './schemas/config.schema';
 import { RedisStore } from 'connect-redis';
+import { ZodExceptionFilter } from './filters/zodException.filter';
 
 async function bootstrap() {
   // Create App instance
@@ -92,9 +93,15 @@ async function bootstrap() {
   app.use(cookieParser(config.get<Config['cookie']>('cookie').secret));
 
   // Implement global exception filter
-  app.useGlobalFilters(new HttpExceptionFilter(), new PrismaExceptionFilter());
+  app.useGlobalFilters(
+    new HttpExceptionFilter(),
+    new PrismaExceptionFilter(),
+    new ZodExceptionFilter(),
+  );
 
   await app.listen(config.get<Config['server']>('server').port);
   logger.log(`Server is running on: ${await app.getUrl()}`);
 }
-bootstrap();
+bootstrap().catch((error) => {
+  Logger.error(error);
+});

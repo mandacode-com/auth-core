@@ -31,9 +31,11 @@ export class TokenController {
     const [accessToken, newRefreshToken] = await Promise.all([
       this.tokenService.accessToken({
         uuid: payload.uuid,
+        role: payload.role,
       }),
       this.tokenService.refreshToken({
         uuid: payload.uuid,
+        role: payload.role,
       }),
     ]);
 

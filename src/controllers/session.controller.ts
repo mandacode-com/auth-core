@@ -15,7 +15,7 @@ export class SessionController {
 
   @Get('check')
   @HttpCode(200)
-  async getAccess(@Req() req: Request): Promise<ResponseData> {
+  getAccess(@Req() req: Request): ResponseData {
     if (req.session.refresh) {
       return {
         message: 'session is valid',
@@ -26,7 +26,7 @@ export class SessionController {
 
   @Get('destroy')
   @HttpCode(200)
-  async logout(@Req() req: Request): Promise<ResponseData> {
+  logout(@Req() req: Request): ResponseData {
     req.session.destroy((err) => {
       if (err) {
         throw new InternalServerErrorException('Failed to destroy session');
