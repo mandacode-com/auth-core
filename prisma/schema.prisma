@@ -7,113 +7,90 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["auth", "member", "public", "temp_member"]
+  schemas  = ["auth", "user", "public", "temp_user"]
 }
 
-model Password {
-  id         Int      @id @default(autoincrement())
-  password   String   @db.VarChar(256)
-  updateDate DateTime @default(now()) @map("update_date") @db.Timestamptz(6)
-  member     Member?
+model AuthAccount {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  loginId   String   @unique @map("login_id") @db.VarChar(256)
+  password  String   @db.VarChar(256)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  @@map("password")
+  @@map("auth_account")
   @@schema("auth")
 }
 
-model Provider {
-  id           Int          @id @default(autoincrement())
-  provider     ProviderType @default(LOCAL)
-  member       Member?
-  socialInfo   SocialInfo?  @relation(fields: [socialInfoId], references: [id], onDelete: Cascade)
-  socialInfoId Int?         @unique @map("social_info_id")
+model OAuthAccount {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider     Provider
+  accessToken  String?  @map("access_token") @db.VarChar(256)
+  refreshToken String?  @map("refresh_token") @db.VarChar(256)
 
-  @@map("provider")
+  @@map("oauth_account")
   @@schema("auth")
 }
 
-model SocialInfo {
-  id       Int       @id @default(autoincrement())
-  clientId String    @map("client_id") @db.VarChar(128)
-  provider Provider?
+model User {
+  id            Int            @id @default(autoincrement())
+  uuid          String         @unique @db.Uuid
+  email         String?        @unique @db.VarChar(256)
+  role          UserRole       @default(USER)
+  authAccount   AuthAccount?
+  oauthAccounts OAuthAccount[]
+  profile       Profile?
 
-  @@map("social_info")
-  @@schema("auth")
-}
-
-model Member {
-  id            Int         @id @default(autoincrement())
-  uuidKey       String      @unique @default(dbgenerated("gen_random_uuid()")) @map("uuid_key") @db.Uuid
-  email         String      @unique @db.VarChar(256)
-  password      Password?   @relation(fields: [passwordId], references: [id], onDelete: Cascade)
-  passwordId    Int?        @unique @map("password_id")
-  provider      Provider    @relation(fields: [providerId], references: [id], onDelete: Cascade)
-  providerId    Int         @unique @map("provider_id")
-  profile       Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  profileId     Int         @unique @map("profile_id")
-  memberGrade   MemberGrade @relation(fields: [memberGradeId], references: [id], onDelete: Cascade)
-  memberGradeId Int         @unique @map("member_grade_id")
-
-  @@map("member")
-  @@schema("member")
+  @@map("user")
+  @@schema("user")
 }
 
 model Profile {
-  id         Int      @id @default(autoincrement())
-  nickname   String   @unique @db.VarChar(32)
-  imageUrl   String?  @map("image_url") @db.VarChar(256)
-  joinDate   DateTime @default(now()) @map("join_date") @db.Timestamptz(6)
-  updateDate DateTime @default(now()) @map("update_date") @db.Timestamptz(6)
-  member     Member?
+  id           Int      @id @default(autoincrement())
+  nickname     String   @unique @db.VarChar(32)
+  profileImage String?  @map("profile_image") @db.VarChar(256)
+  joinDate     DateTime @default(now()) @map("join_date") @db.Timestamptz(6)
+  updateDate   DateTime @updatedAt @map("update_date") @db.Timestamptz(6)
+  userId       Int      @unique @map("user_id")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("profile")
-  @@schema("member")
+  @@schema("user")
 }
 
-model MemberGrade {
-  id         Int       @id @default(autoincrement())
-  updateDate DateTime? @default(now()) @map("update_date") @db.Timestamptz(6)
-  grade      GradeType @default(NORMAL)
-  member     Member?
-
-  @@map("member_grade")
-  @@schema("member")
-}
-
-model TempMember {
-  id                  BigInt            @id @default(autoincrement())
-  email               String            @unique @db.VarChar(256)
-  nickname            String            @db.VarChar(32)
-  password            String            @db.VarChar(256)
-  createDate          DateTime          @default(now()) @map("create_date") @db.Timestamptz(6)
-  expiryDate          DateTime          @default(now()) @map("expiry_date") @db.Timestamptz(6)
-  emailVerification   EmailVerification @relation(fields: [emailVerificationId], references: [id], onDelete: Cascade)
-  emailVerificationId BigInt            @unique @map("email_verification_id")
+model TempUser {
+  id                    BigInt   @id @default(autoincrement())
+  email                 String   @unique @db.VarChar(256)
+  nickname              String   @db.VarChar(32)
+  loginId               String   @unique @map("login_id") @db.VarChar(256)
+  password              String   @db.VarChar(256)
+  createDate            DateTime @default(now()) @map("create_date") @db.Timestamptz(6)
+  expiryDate            DateTime @default(dbgenerated("now() + interval '1 day'")) @map("expiry_date") @db.Timestamptz(6)
+  emailVerificationCode String   @map("email_verification_code") @db.Char(16)
 
   @@map("temp_member")
-  @@schema("temp_member")
+  @@schema("temp_user")
 }
 
-model EmailVerification {
-  id         BigInt      @id @default(autoincrement())
-  code       String      @unique @db.Char(16)
-  TempMember TempMember?
-
-  @@map("email_verification")
-  @@schema("temp_member")
-}
-
-enum ProviderType {
-  LOCAL  @map("local")
-  GOOGLE @map("google")
+enum Provider {
+  GOOGLE   @map("google")
+  NAVER    @map("naver")
+  KAKAO    @map("kakao")
+  APPLE    @map("apple")
+  FACEBOOK @map("facebook")
+  GITHUB   @map("github")
 
   @@map("provider_type")
   @@schema("public")
 }
 
-enum GradeType {
-  ADMIN  @map("admin")
-  NORMAL @map("normal")
+enum UserRole {
+  SUPER @map("super")
+  ADMIN @map("admin")
+  USER  @map("user")
 
-  @@map("grade_type")
+  @@map("role")
   @@schema("public")
 }
