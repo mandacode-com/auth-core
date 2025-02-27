@@ -28,15 +28,16 @@ export const configSchema = z.object({
     timeout: z.number().int().positive().default(3600),
     storageUrl: z.string().default('redis://localhost:6379'),
   }),
-  status: z.object({
-    localSignup: z.boolean().default(true),
-    localSignin: z.boolean().default(true),
-  }),
   jwt: z.object({
-    secret: z.object({
-      access: z.string().min(8),
-      refresh: z.string().min(8),
-      emailConfirmation: z.string().min(8),
+    public: z.object({
+      access: z.string(),
+      refresh: z.string(),
+      emailVerification: z.string(),
+    }),
+    private: z.object({
+      access: z.string(),
+      refresh: z.string(),
+      emailVerification: z.string(),
     }),
     // Token expiration in seconds
     expiresIn: z.object({
@@ -48,7 +49,7 @@ export const configSchema = z.object({
         .string()
         .regex(/^\d+[smhdy]$/)
         .default('30d'),
-      emailConfirmation: z
+      emailVerification: z
         .string()
         .regex(/^\d+[smhdy]$/)
         .default('30d'),
@@ -58,7 +59,7 @@ export const configSchema = z.object({
     url: z.string(),
   }),
   urls: z.object({
-    confirmEmail: z.string().url(),
+    verifyEmail: z.string().url(),
   }),
 });
 

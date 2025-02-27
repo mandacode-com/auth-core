@@ -1,7 +1,5 @@
 import { Config, configSchema } from 'src/schemas/config.schema';
 
-const parseBoolean = (value: string) => value === 'true';
-
 export function validate(raw: Record<string, unknown>) {
   const env: Config = {
     server: {
@@ -20,27 +18,28 @@ export function validate(raw: Record<string, unknown>) {
       timeout: parseInt(raw.SESSION_TIMEOUT as string),
       storageUrl: raw.SESSION_STORAGE_URL as string,
     },
-    status: {
-      localSignup: parseBoolean(raw.STATUS_LOCAL_SIGNUP as string),
-      localSignin: parseBoolean(raw.STATUS_LOCAL_SIGNIN as string),
-    },
     jwt: {
-      secret: {
-        access: raw.JWT_SECRET_ACCESS as string,
-        refresh: raw.JWT_SECRET_REFRESH as string,
-        emailConfirmation: raw.JWT_SECRET_EMAIL_CONFIRMATION as string,
+      public: {
+        access: raw.JWT_PUBLIC_ACCESS as string,
+        refresh: raw.JWT_PUBLIC_REFRESH as string,
+        emailVerification: raw.JWT_PUBLIC_EMAIL_VERIFICATION as string,
+      },
+      private: {
+        access: raw.JWT_PRIVATE_ACCESS as string,
+        refresh: raw.JWT_PRIVATE_REFRESH as string,
+        emailVerification: raw.JWT_PRIVATE_EMAIL_VERIFICATION as string,
       },
       expiresIn: {
         access: raw.JWT_EXPIRES_IN_ACCESS as string,
         refresh: raw.JWT_EXPIRES_IN_REFRESH as string,
-        emailConfirmation: raw.JWT_EXPIRES_IN_EMAIL_CONFIRMATION as string,
+        emailVerification: raw.JWT_EXPIRES_IN_EMAIL_VERIFICATION as string,
       },
     },
     mailer: {
       url: raw.AUTO_MAILER_URL as string,
     },
     urls: {
-      confirmEmail: raw.CONFIRM_EMAIL_URL as string,
+      verifyEmail: raw.VERIFY_EMAIL_URL as string,
     },
   };
 
