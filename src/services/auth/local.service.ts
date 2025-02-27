@@ -8,7 +8,8 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma.service';
 import { randomBytes } from 'crypto';
 import { TokenService } from '../token.service';
-import { GradeType, ProviderType, TempMember } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { TempUser, UserRole } from '@prisma/client';
 
 @Injectable()
 export class AuthLocalService {
@@ -18,254 +19,225 @@ export class AuthLocalService {
   ) {}
 
   /**
-   * @description Create a temporary member
-   * @param {string} email Email address
-   * @param {string} password Password
-   * @param {string} [nickname] Nickname
-   * @returns {Promise<string>}
-   * @memberof SignupService
-   * @throws {ConflictException} Email already exists
-   * @throws {BadRequestException} Please confirm the email
+   * @description Create a temporary user
+   * @param {{
+   *    email: string;
+   *    loginId: string;
+   *    password: string;
+   *    nickname?: string;
+   *    }} data Email, login ID, password, nickname
+   * @returns {Promise<string>} Token
    */
-  async createTempMember(
-    email: string,
-    password: string,
-    nickname?: string,
-  ): Promise<string> {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const modifiedNickname = nickname || email.split('@')[0];
+  async createTempUser(data: {
+    email: string;
+    loginId: string;
+    password: string;
+    nickname?: string;
+  }): Promise<string> {
+    const hashedPassword = await bcrypt.hash(data.password, 10);
 
-    const existingMember = await this.prisma.member.findUnique({
-      where: { email },
-    });
-    if (existingMember) {
+    // Check if the email or login ID already exists
+    const [existingEmail, existingLoginId] = await Promise.all([
+      this.prisma.user.findUnique({
+        select: {
+          id: true,
+        },
+        where: {
+          email: data.email,
+        },
+      }),
+      this.prisma.authAccount.findUnique({
+        select: {
+          id: true,
+        },
+        where: {
+          loginId: data.loginId,
+        },
+      }),
+    ]);
+
+    if (existingEmail) {
       throw new ConflictException('Email already exists');
     }
-    const tempMember = await this.prisma.tempMember
+    if (existingLoginId) {
+      throw new ConflictException('ID already exists');
+    }
+
+    const code = randomBytes(8).toString('hex');
+
+    // Create a temporary user
+    const tempUser = await this.prisma.tempUser
       .create({
-        select: {
-          emailVerification: {
-            select: {
-              code: true,
-            },
-          },
-        },
         data: {
-          email,
-          nickname: modifiedNickname,
+          email: data.email,
+          loginId: data.loginId,
           password: hashedPassword,
-          emailVerification: {
-            create: {
-              code: randomBytes(8).toString('hex'),
-            },
-          },
+          nickname: data.nickname ?? data.loginId,
+          emailVerificationCode: code,
         },
       })
       .catch((e) => {
-        if (e.code === 'P2002') {
-          throw new BadRequestException('Please confirm the email');
+        if (e instanceof PrismaClientKnownRequestError && e.code === 'P2002') {
+          throw new BadRequestException('Please verify the email');
         }
         throw e;
       });
 
-    const token = this.tokenService.emailConfirmToken({
-      email,
-      code: tempMember.emailVerification.code,
+    // Create a token
+    const token = this.tokenService.emailVerificationToken({
+      code: tempUser.emailVerificationCode,
+      email: tempUser.email,
     });
 
     return token;
   }
 
   /**
-   * @description Resend the confirmation email
-   * @param {string} email Email address
-   * @returns {Promise<string>}
-   * @memberof SignupService
-   * @throws {BadRequestException} Member not found
+   * @description Resend the email verification code
+   * @param {{ email: string }} data Email
+   * @returns {Promise<string>} Token
    */
-  async resend(email: string): Promise<string> {
-    const updatedTempMember = await this.prisma.tempMember.update({
-      select: {
-        email: true,
-        emailVerification: {
-          select: {
-            code: true,
-          },
-        },
-      },
-      where: {
-        email,
-      },
-      data: {
-        emailVerification: {
-          update: {
-            code: randomBytes(8).toString('hex'),
-          },
-        },
-      },
-    });
-
-    const token = this.tokenService.emailConfirmToken({
-      email,
-      code: updatedTempMember.emailVerification.code,
-    });
-    return token;
-  }
-
-  /**
-   * @description Confirm the email
-   * @param {string} token Token
-   * @returns {Promise<{ uuid: string; email: string }>}
-   * @memberof SignupService
-   * @throws {BadRequestException} Invalid token
-   * @throws {BadRequestException} Member not found
-   * @throws {BadRequestException} Code does not match
-   */
-  async confirm(token: string): Promise<{
-    uuid: string;
-    email: string;
-  }> {
-    const data = await this.tokenService
-      .verifyEmailConfirmToken(token)
-      .catch(() => {
-        throw new BadRequestException('Invalid token');
-      });
-    const tempMember = await this.prisma.tempMember.findUnique({
+  async resend(data: { email: string }): Promise<string> {
+    const tempUser = await this.prisma.tempUser.findUnique({
       select: {
         id: true,
-        email: true,
-        password: true,
-        nickname: true,
-        emailVerification: {
-          select: {
-            code: true,
-          },
-        },
       },
       where: {
         email: data.email,
       },
     });
 
-    if (!tempMember) {
-      throw new BadRequestException('Member not found');
+    if (!tempUser) {
+      throw new BadRequestException('user not found');
     }
 
-    if (tempMember.emailVerification.code !== data.code) {
-      throw new BadRequestException('Code does not match');
+    const updatedTempUser = await this.prisma.tempUser.update({
+      select: {
+        emailVerificationCode: true,
+      },
+      data: {
+        emailVerificationCode: randomBytes(8).toString('hex'),
+      },
+      where: {
+        email: data.email,
+      },
+    });
+
+    const token = this.tokenService.emailVerificationToken({
+      code: updatedTempUser.emailVerificationCode,
+      email: data.email,
+    });
+
+    return token;
+  }
+
+  /**
+   * @description Verify the email
+   * @param {{ token: string }} data Token
+   * @returns {Promise<{ uuid: string }>}
+   */
+  async verifyEmail(data: { token: string }): Promise<{
+    uuid: string;
+  }> {
+    const payload = await this.tokenService
+      .verifyEmailVerificationToken(data.token)
+      .catch(() => {
+        throw new BadRequestException('Invalid token');
+      });
+    const tempUser = await this.prisma.tempUser.findUnique({
+      where: {
+        email: payload.email,
+        emailVerificationCode: payload.code,
+      },
+    });
+
+    if (!tempUser) {
+      throw new BadRequestException('Invalid token');
     }
 
-    const [createdMember, _deleteTemporaryMember] =
-      await this.prisma.$transaction([
-        this.prisma.member.create({
-          data: {
-            email: tempMember.email,
-            password: {
-              create: {
-                password: tempMember.password,
-              },
-            },
-            provider: {
-              create: {
-                provider: ProviderType.LOCAL,
-              },
-            },
-            profile: {
-              create: {
-                nickname: tempMember.nickname,
-              },
-            },
-            memberGrade: {
-              create: {
-                grade: GradeType.NORMAL,
-              },
+    const randomUuid = crypto.randomUUID();
+
+    const [createdUser, _deleteTemporaryUser] = await this.prisma.$transaction([
+      this.prisma.user.create({
+        data: {
+          uuid: randomUuid,
+          email: tempUser.email,
+          profile: {
+            create: {
+              nickname: tempUser.nickname,
             },
           },
-        }),
-        this.prisma.tempMember.delete({
-          where: { id: tempMember.id },
-        }),
-      ]);
+          authAccount: {
+            create: {
+              loginId: tempUser.loginId,
+              password: tempUser.password,
+            },
+          },
+        },
+      }),
+      this.prisma.tempUser.delete({
+        where: { id: tempUser.id },
+      }),
+    ]);
 
     return {
-      uuid: createdMember.uuidKey,
-      email: createdMember.email,
+      uuid: createdUser.uuid,
     };
   }
 
   /**
-   * @description Delete the temporary member
-   * @param {string} email Email address
-   * @returns {Promise<void>}
-   * @memberof SignupService
+   * @description Delete the temporary user
+   * @param {{ email: string }} data Email
+   * @returns {Promise<TempUser>}
    */
-  async deleteTempMember(email: string): Promise<TempMember> {
-    return this.prisma.tempMember.delete({
+  async deleteTempUser(data: { email: string }): Promise<TempUser> {
+    return this.prisma.tempUser.delete({
       where: {
-        email,
+        email: data.email,
       },
     });
   }
 
   /**
-   * @description Sign in
-   * @param {string} email Email address
-   * @param {string} password Password
-   * @returns {Promise<member>}
-   * @memberof SigninService
-   * @throws {UnauthorizedException} Email or password is incorrect
-   * @throws {InternalServerErrorException} Provider does not exist
-   * @throws {InternalServerErrorException} Password does not exist
+   * @description Login
+   * @param {{ loginId: string; password: string }} data Login ID, password
+   * @returns {Promise<{ uuid: string }>}
    */
-  async signin(
-    email: string,
-    password: string,
-  ): Promise<{
+  async login(data: { loginId: string; password: string }): Promise<{
     uuid: string;
-    email: string;
+    role: UserRole;
   }> {
-    const member = await this.prisma.member.findUnique({
+    const authAccount = await this.prisma.authAccount.findUnique({
       select: {
-        provider: {
+        password: true,
+        user: {
           select: {
-            provider: true,
+            uuid: true,
+            role: true,
           },
         },
-        password: {
-          select: {
-            password: true,
-          },
-        },
-        uuidKey: true,
-        email: true,
       },
       where: {
-        email,
+        loginId: data.loginId,
       },
     });
 
-    // Check if the member exists
-    if (!member) {
-      throw new UnauthorizedException('Email or password is incorrect.');
+    if (!authAccount) {
+      throw new UnauthorizedException('Email or password is incorrect');
     }
 
-    // Check if the provider is local
-    if (member.provider?.provider !== ProviderType.LOCAL) {
-      throw new BadRequestException('This method is not allowed. Use OAuth2.');
-    }
-
-    // Check if the password correct
-    const comparePasswordResult = await bcrypt.compare(
-      password,
-      member.password?.password || '',
+    const passwordMatch = await bcrypt.compare(
+      data.password,
+      authAccount.password,
     );
-    if (!comparePasswordResult) {
-      throw new UnauthorizedException('Email or password is incorrect.');
+
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Email or password is incorrect');
     }
 
     return {
-      uuid: member.uuidKey,
-      email: member.email,
+      uuid: authAccount.user.uuid,
+      role: authAccount.user.role,
     };
   }
 }

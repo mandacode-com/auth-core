@@ -1,12 +1,14 @@
-import { Prisma, TempMember } from '@prisma/client';
+import { AuthAccount, Prisma, TempUser } from '@prisma/client';
 import { AuthLocalService } from './local.service';
 import { mock, MockProxy } from 'jest-mock-extended';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TokenService } from '../token.service';
 import {
-  mockEmailVerification,
-  mockMember,
-  mockTempMember,
+  mockAuthAccount,
+  mockPassword,
+  mockProfile,
+  mockTempUser,
+  mockUser,
   prismaMock,
 } from 'test/singleton';
 import { PrismaService } from '../prisma.service';
@@ -36,62 +38,88 @@ describe('local.service.spec.ts', () => {
     service = testingModule.get<AuthLocalService>(AuthLocalService);
   });
 
-  describe('signup', () => {
+  describe('createTempUser', () => {
     const token = randomBytes(8).toString('hex');
-    it('should create a new member', async () => {
-      prismaMock.member.findUnique.mockResolvedValue(null);
-      const tempMemberCreateValue = {
-        emailVerification: {
-          code: mockEmailVerification.code,
-        },
-      } as unknown as Prisma.Prisma__TempMemberClient<TempMember>;
-      prismaMock.tempMember.create.mockResolvedValueOnce(tempMemberCreateValue);
-      tokenServiceMock.emailConfirmToken.mockReturnValueOnce(
-        Promise.resolve(token),
-      );
+    it('should create a temporary user', async () => {
+      const data = {
+        email: mockTempUser.email,
+        loginId: mockTempUser.loginId,
+        password: mockAuthAccount.password,
+        nickname: mockProfile.nickname,
+      };
 
-      const result = await service.createTempMember(
-        mockTempMember.email,
-        mockTempMember.password,
-        mockTempMember.nickname,
-      );
+      prismaMock.user.findUnique.mockResolvedValue(null);
+      prismaMock.authAccount.findUnique.mockResolvedValue(null);
+      prismaMock.tempUser.create.mockResolvedValue(mockTempUser);
+      tokenServiceMock.emailVerificationToken.mockResolvedValue(token);
+
+      const result: string = await service.createTempUser(data);
+
       expect(result).toBe(token);
-      expect(prismaMock.member.findUnique).toHaveBeenCalled();
-      expect(prismaMock.tempMember.create).toHaveBeenCalled();
-      expect(tokenServiceMock.emailConfirmToken).toHaveBeenCalled();
     });
   });
 
-  describe('confirm', () => {
-    const token = randomBytes(8).toString('hex');
+  describe('verifyEmail', () => {
+    it('should verify the email', async () => {
+      const token = randomBytes(8).toString('hex');
+      const payload = {
+        code: token,
+        email: mockTempUser.email,
+      };
 
-    it('should confirm', async () => {
-      tokenServiceMock.verifyEmailConfirmToken.mockResolvedValue({
-        email: mockTempMember.email,
-        code: mockEmailVerification.code,
-      });
-      const tempMemberFindUniqueValue = {
-        id: mockTempMember.id,
-        email: mockTempMember.email,
-        password: mockTempMember.password,
-        nickname: mockTempMember.nickname,
-        emailVerification: {
-          code: mockEmailVerification.code,
-        },
-      } as unknown as Prisma.Prisma__TempMemberClient<TempMember>;
-      prismaMock.tempMember.findUnique.mockResolvedValue(
-        tempMemberFindUniqueValue,
-      );
-      prismaMock.$transaction.mockResolvedValue([mockMember, mockTempMember]);
+      prismaMock.tempUser.findUnique.mockResolvedValue(mockTempUser);
+      prismaMock.user.create.mockResolvedValue(mockUser);
+      prismaMock.$transaction.mockResolvedValue([mockUser, null]);
+      tokenServiceMock.verifyEmailVerificationToken.mockResolvedValue(payload);
 
-      const result = await service.confirm(token);
+      const result = await service.verifyEmail({ token });
+
+      expect(result).toEqual({ uuid: mockUser.uuid });
+    });
+  });
+
+  describe('resend', () => {
+    it('should resend the email', async () => {
+      const token = randomBytes(8).toString('hex');
+      const email = mockTempUser.email;
+
+      prismaMock.tempUser.findUnique.mockResolvedValue(mockTempUser);
+      prismaMock.tempUser.update.mockResolvedValue(mockTempUser);
+      tokenServiceMock.emailVerificationToken.mockResolvedValue(token);
+
+      const result = await service.resend({ email });
+
+      expect(result).toBe(token);
+    });
+  });
+
+  describe('deleteTempUser', () => {
+    it('should delete the temporary user', async () => {
+      const email = mockTempUser.email;
+
+      prismaMock.tempUser.delete.mockResolvedValue(mockTempUser);
+
+      const result = await service.deleteTempUser({ email });
+
+      expect(result).toEqual(mockTempUser);
+    });
+  });
+
+  describe('login', () => {
+    it('should login', async () => {
+      const loginId = mockAuthAccount.loginId;
+      const password = mockPassword;
+
+      prismaMock.authAccount.findUnique.mockResolvedValue({
+        ...mockAuthAccount,
+        user: mockUser,
+      } as AuthAccount);
+
+      const result = await service.login({ loginId, password });
+
       expect(result).toEqual({
-        uuid: mockMember.uuidKey,
-        email: mockTempMember.email,
+        uuid: mockUser.uuid,
       });
-      expect(tokenServiceMock.verifyEmailConfirmToken).toHaveBeenCalled();
-      expect(prismaMock.tempMember.findUnique).toHaveBeenCalled();
-      expect(prismaMock.$transaction).toHaveBeenCalled();
     });
   });
 });
