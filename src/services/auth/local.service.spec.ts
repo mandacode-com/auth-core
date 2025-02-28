@@ -1,4 +1,4 @@
-import { AuthAccount, Prisma, TempUser } from '@prisma/client';
+import { AuthAccount } from '@prisma/client';
 import { AuthLocalService } from './local.service';
 import { mock, MockProxy } from 'jest-mock-extended';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -13,6 +13,8 @@ import {
 } from 'test/singleton';
 import { PrismaService } from '../prisma.service';
 import { randomBytes } from 'crypto';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import ms from 'ms';
 
 describe('local.service.spec.ts', () => {
   let service: AuthLocalService;
@@ -22,6 +24,13 @@ describe('local.service.spec.ts', () => {
     tokenServiceMock = mock<TokenService>();
 
     const testingModule: TestingModule = await Test.createTestingModule({
+      imports: [
+        ConfigModule.forFeature(() => ({
+          mailer: {
+            minDelay: '1d',
+          },
+        })),
+      ],
       providers: [
         AuthLocalService,
         {
@@ -83,13 +92,26 @@ describe('local.service.spec.ts', () => {
       const token = randomBytes(8).toString('hex');
       const email = mockTempUser.email;
 
-      prismaMock.tempUser.findUnique.mockResolvedValue(mockTempUser);
+      prismaMock.tempUser.findUnique.mockResolvedValue({
+        ...mockTempUser,
+        updateDate: new Date(new Date().getTime() - ms('2d')),
+      });
       prismaMock.tempUser.update.mockResolvedValue(mockTempUser);
       tokenServiceMock.emailVerificationToken.mockResolvedValue(token);
 
       const result = await service.resend({ email });
 
       expect(result).toBe(token);
+    });
+
+    it('should throw an error if the email is sent within 1 day', async () => {
+      const email = mockTempUser.email;
+
+      prismaMock.tempUser.findUnique.mockResolvedValue(mockTempUser);
+
+      await expect(service.resend({ email })).rejects.toThrow(
+        'Please wait 1 minute before resending',
+      );
     });
   });
 
@@ -119,6 +141,7 @@ describe('local.service.spec.ts', () => {
 
       expect(result).toEqual({
         uuid: mockUser.uuid,
+        role: mockUser.role,
       });
     });
   });

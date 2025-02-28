@@ -10,13 +10,22 @@ import { randomBytes } from 'crypto';
 import { TokenService } from '../token.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { TempUser, UserRole } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
+import { Config } from 'src/schemas/config.schema';
+import ms from 'ms';
 
 @Injectable()
 export class AuthLocalService {
+  // Minimum delay between resending the email verification code in milliseconds
+  private minDelay: number;
   constructor(
     private readonly prisma: PrismaService,
     private readonly tokenService: TokenService,
-  ) {}
+    private readonly configService: ConfigService<Config, true>,
+  ) {
+    const config: Config['mailer'] = this.configService.get('mailer');
+    this.minDelay = ms(config.minDelay as ms.StringValue);
+  }
 
   /**
    * @description Create a temporary user
@@ -101,6 +110,8 @@ export class AuthLocalService {
     const tempUser = await this.prisma.tempUser.findUnique({
       select: {
         id: true,
+        updateDate: true,
+        resendCount: true,
       },
       where: {
         email: data.email,
@@ -109,6 +120,12 @@ export class AuthLocalService {
 
     if (!tempUser) {
       throw new BadRequestException('user not found');
+    }
+    if (tempUser.updateDate.getTime() + this.minDelay > Date.now()) {
+      throw new BadRequestException('Please wait 1 minute before resending');
+    }
+    if (tempUser.resendCount >= 10) {
+      throw new BadRequestException('Please try again later');
     }
 
     const updatedTempUser = await this.prisma.tempUser.update({

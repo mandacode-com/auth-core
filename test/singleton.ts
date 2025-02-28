@@ -56,8 +56,10 @@ const mockTempUser: TempUser = {
   loginId: mockAuthAccount.loginId,
   password: mockAuthAccount.password,
   createDate: new Date(),
+  updateDate: new Date(),
   expiryDate: new Date(),
   emailVerificationCode: randomBytes(8).toString('hex'),
+  resendCount: 0,
 };
 
 export { mockPassword, mockUser, mockAuthAccount, mockProfile, mockTempUser };

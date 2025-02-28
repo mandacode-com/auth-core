@@ -57,9 +57,30 @@ export const configSchema = z.object({
   }),
   mailer: z.object({
     url: z.string(),
+    minDelay: z
+      .string()
+      .regex(/^\d+[smhdy]$/)
+      .default('1m'),
   }),
   urls: z.object({
     verifyEmail: z.string().url(),
+  }),
+  servicesStatus: z.object({
+    auth: z.object({
+      local: z.object({
+        signup: z.boolean().default(true),
+        login: z.boolean().default(true),
+        verifyEmail: z.boolean().default(true),
+        resend: z.boolean().default(true),
+      }),
+    }),
+    session: z.object({
+      check: z.boolean().default(true),
+      destroy: z.boolean().default(true),
+    }),
+    token: z.object({
+      refresh: z.boolean().default(true),
+    }),
   }),
 });
 

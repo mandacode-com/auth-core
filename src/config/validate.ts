@@ -1,5 +1,17 @@
 import { Config, configSchema } from 'src/schemas/config.schema';
 
+const parseBoolean = (value: string | null | undefined) => {
+  if (!value) {
+    return undefined;
+  }
+  if (value === 'true') {
+    return true;
+  } else if (value === 'false') {
+    return false;
+  }
+  throw new Error('Invalid boolean value');
+};
+
 export function validate(raw: Record<string, unknown>) {
   const env: Config = {
     server: {
@@ -37,9 +49,35 @@ export function validate(raw: Record<string, unknown>) {
     },
     mailer: {
       url: raw.AUTO_MAILER_URL as string,
+      minDelay: raw.AUTO_MAILER_MIN_DELAY as string,
     },
     urls: {
       verifyEmail: raw.VERIFY_EMAIL_URL as string,
+    },
+    servicesStatus: {
+      auth: {
+        local: {
+          signup: parseBoolean(
+            raw.SERVICE_AUTH_LOCAL_SIGNUP as string,
+          ) as boolean,
+          login: parseBoolean(
+            raw.SERVICE_AUTH_LOCAL_LOGIN as string,
+          ) as boolean,
+          verifyEmail: parseBoolean(
+            raw.SERVICE_AUTH_LOCAL_VERIFY_EMAIL as string,
+          ) as boolean,
+          resend: parseBoolean(
+            raw.SERVICE_AUTH_LOCAL_RESEND as string,
+          ) as boolean,
+        },
+      },
+      session: {
+        check: parseBoolean(raw.SERVICE_SESSION_CHECK as string) as boolean,
+        destroy: parseBoolean(raw.SERVICE_SESSION_DESTROY as string) as boolean,
+      },
+      token: {
+        refresh: parseBoolean(raw.SERVICE_TOKEN_REFRESH as string) as boolean,
+      },
     },
   };
 

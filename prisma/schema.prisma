@@ -67,8 +67,10 @@ model TempUser {
   loginId               String   @unique @map("login_id") @db.VarChar(256)
   password              String   @db.VarChar(256)
   createDate            DateTime @default(now()) @map("create_date") @db.Timestamptz(6)
+  updateDate            DateTime @updatedAt @map("update_date") @db.Timestamptz(6)
   expiryDate            DateTime @default(dbgenerated("now() + interval '1 day'")) @map("expiry_date") @db.Timestamptz(6)
   emailVerificationCode String   @map("email_verification_code") @db.Char(16)
+  resendCount           Int      @default(0) @map("resend_count")
 
   @@map("temp_member")
   @@schema("temp_user")
