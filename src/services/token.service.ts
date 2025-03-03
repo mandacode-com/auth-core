@@ -13,17 +13,12 @@ import { Config } from 'src/schemas/config.schema';
 
 @Injectable()
 export class TokenService {
-  private readonly publicKey: Config['jwt']['public'];
-  private readonly privateKey: Config['jwt']['private'];
-  private readonly tokenExpiresIn: Config['jwt']['expiresIn'];
+  private readonly jwtConfig: Config['jwt'];
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService<Config, true>,
   ) {
-    this.publicKey = this.configService.get<Config['jwt']>('jwt').public;
-    this.privateKey = this.configService.get<Config['jwt']>('jwt').private;
-    this.tokenExpiresIn =
-      this.configService.get<Config['jwt']>('jwt').expiresIn;
+    this.jwtConfig = this.configService.get<Config['jwt']>('jwt');
   }
 
   /**
@@ -37,8 +32,8 @@ export class TokenService {
     options?: JwtSignOptions,
   ): Promise<string> {
     return this.jwtService.signAsync(payload, {
-      privateKey: this.privateKey.access,
-      expiresIn: this.tokenExpiresIn.access,
+      privateKey: this.jwtConfig.access.private,
+      expiresIn: this.jwtConfig.access.expiresIn,
       ...options,
     });
   }
@@ -55,7 +50,7 @@ export class TokenService {
   ): Promise<AccessTokenPayload> {
     return this.jwtService
       .verifyAsync<AccessTokenPayload>(accessToken, {
-        publicKey: this.publicKey.access,
+        publicKey: this.jwtConfig.access.public,
         ...options,
       })
       .then(async (payload) => {
@@ -76,8 +71,8 @@ export class TokenService {
     options?: JwtSignOptions,
   ): Promise<string> {
     return this.jwtService.signAsync(payload, {
-      privateKey: this.privateKey.refresh,
-      expiresIn: this.tokenExpiresIn.refresh,
+      privateKey: this.jwtConfig.refresh.private,
+      expiresIn: this.jwtConfig.refresh.expiresIn,
       ...options,
     });
   }
@@ -94,7 +89,7 @@ export class TokenService {
   ): Promise<RefreshTokenPayload> {
     return this.jwtService
       .verifyAsync<RefreshTokenPayload>(refreshToken, {
-        publicKey: this.publicKey.refresh,
+        publicKey: this.jwtConfig.refresh.public,
         ...options,
       })
       .then(async (payload) => {
@@ -115,8 +110,8 @@ export class TokenService {
     options?: JwtSignOptions,
   ): Promise<string> {
     return this.jwtService.signAsync(payload, {
-      privateKey: this.privateKey.emailVerification,
-      expiresIn: this.tokenExpiresIn.emailVerification,
+      privateKey: this.jwtConfig.emailVerification.private,
+      expiresIn: this.jwtConfig.emailVerification.expiresIn,
       ...options,
     });
   }
@@ -132,7 +127,7 @@ export class TokenService {
   ): Promise<EmailConfrimationTokenPayload> {
     return this.jwtService
       .verifyAsync<EmailConfrimationTokenPayload>(verifyEmailToken, {
-        publicKey: this.publicKey.emailVerification,
+        publicKey: this.jwtConfig.emailVerification.public,
         ...options,
       })
       .then(async (payload) => {

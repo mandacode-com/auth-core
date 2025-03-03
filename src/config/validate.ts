@@ -31,20 +31,20 @@ export function validate(raw: Record<string, unknown>) {
       storageUrl: raw.SESSION_STORAGE_URL as string,
     },
     jwt: {
-      public: {
-        access: raw.JWT_PUBLIC_ACCESS as string,
-        refresh: raw.JWT_PUBLIC_REFRESH as string,
-        emailVerification: raw.JWT_PUBLIC_EMAIL_VERIFICATION as string,
+      access: {
+        public: raw.JWT_PUBLIC_ACCESS as string,
+        private: raw.JWT_PRIVATE_ACCESS as string,
+        expiresIn: raw.JWT_EXPIRES_IN_ACCESS as string,
       },
-      private: {
-        access: raw.JWT_PRIVATE_ACCESS as string,
-        refresh: raw.JWT_PRIVATE_REFRESH as string,
-        emailVerification: raw.JWT_PRIVATE_EMAIL_VERIFICATION as string,
+      refresh: {
+        public: raw.JWT_PUBLIC_REFRESH as string,
+        private: raw.JWT_PRIVATE_REFRESH as string,
+        expiresIn: raw.JWT_EXPIRES_IN_REFRESH as string,
       },
-      expiresIn: {
-        access: raw.JWT_EXPIRES_IN_ACCESS as string,
-        refresh: raw.JWT_EXPIRES_IN_REFRESH as string,
-        emailVerification: raw.JWT_EXPIRES_IN_EMAIL_VERIFICATION as string,
+      emailVerification: {
+        public: raw.JWT_PUBLIC_EMAIL_VERIFICATION as string,
+        private: raw.JWT_PRIVATE_EMAIL_VERIFICATION as string,
+        expiresIn: raw.JWT_EXPIRES_IN_EMAIL_VERIFICATION as string,
       },
     },
     mailer: {

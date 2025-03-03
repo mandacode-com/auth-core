@@ -29,27 +29,26 @@ export const configSchema = z.object({
     storageUrl: z.string().default('redis://localhost:6379'),
   }),
   jwt: z.object({
-    public: z.object({
-      access: z.string(),
-      refresh: z.string(),
-      emailVerification: z.string(),
-    }),
-    private: z.object({
-      access: z.string(),
-      refresh: z.string(),
-      emailVerification: z.string(),
-    }),
-    // Token expiration in seconds
-    expiresIn: z.object({
-      access: z
+    access: z.object({
+      public: z.string(),
+      private: z.string(),
+      expiresIn: z
         .string()
         .regex(/^\d+[smhdy]$/)
         .default('15m'),
-      refresh: z
+    }),
+    refresh: z.object({
+      public: z.string(),
+      private: z.string(),
+      expiresIn: z
         .string()
         .regex(/^\d+[smhdy]$/)
         .default('30d'),
-      emailVerification: z
+    }),
+    emailVerification: z.object({
+      public: z.string(),
+      private: z.string(),
+      expiresIn: z
         .string()
         .regex(/^\d+[smhdy]$/)
         .default('30d'),

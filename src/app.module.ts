@@ -5,6 +5,7 @@ import { SessionModule } from './modules/session.module';
 import { AuthLocalModule } from './modules/auth/local.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { TokenModule } from './modules/token.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -21,5 +22,6 @@ import { TokenModule } from './modules/token.module';
     SessionModule,
     TokenModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}
