@@ -72,7 +72,7 @@ model TempUser {
   emailVerificationCode String   @map("email_verification_code") @db.Char(16)
   resendCount           Int      @default(0) @map("resend_count")
 
-  @@map("temp_member")
+  @@map("temp_user")
   @@schema("temp_user")
 }
 
