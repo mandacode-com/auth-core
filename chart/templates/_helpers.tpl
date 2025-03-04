@@ -62,18 +62,40 @@ Create the name of the service account to use
 {{- end }}
 
 {{/*
+  Auto mailer
+*/}}
+{{- define "auth-core.auto_mailer.url" -}}
+{{ printf "%s:%s" .Values.auto_mailer.host (toString .Values.auto_mailer.port) }}
+{{- end -}}
+
+{{/*
   Database
 */}}
 {{- define "auth-core.database.url" -}}
 {{ printf "postgresql://%s:%s@%s:%s/%s" .Values.database.auth.username .Values.database.auth.password .Values.database.host (toString .Values.database.port) .Values.database.name }}
-{{- end }}
+{{- end -}}
 
 {{/*
   Redis session store
 */}}
 {{- define "auth-core.redis.url" -}}
+{{- if .Values.redis.password -}}
+{{ printf "redis://:%s@%s:%s" .Values.redis.password .Values.redis.host (toString .Values.redis.port) }}
+{{- else -}}
 {{ printf "redis://%s:%s" .Values.redis.host (toString .Values.redis.port) }}
-{{- end }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+  Cookie
+*/}}
+{{- define "auth-core.cookie.secretName" -}}
+{{- if .Values.cookie.secretName -}}
+{{ .Values.cookie.secretName }}
+{{- else -}}
+{{ printf "%s-cookie-secret" .Release.Name }}
+{{- end -}}
+{{- end -}}
 
 {{/*
   JWT

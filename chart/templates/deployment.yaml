@@ -32,6 +32,14 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      initContainers:
+        - name: prisma-migrate
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["npx", "prisma", "migrate", "deploy"]
+          env:
+            - name: DATABASE_URL
+              value: {{ include "auth-core.database.url" . | quote }}
       containers:
         - name: {{ .Chart.Name }}
           {{- with .Values.securityContext }}
@@ -63,19 +71,22 @@ spec:
 
           env:
             - name: PORT
-              value: {{ .Values.image.port }}
+              value: {{ .Values.image.port | quote }}
             - name: CORS_ORIGIN
               value: {{ .Values.cors.origin | quote }}
             - name: COOKIE_DOMAIN
               value: {{ .Values.cookie.domain | quote }}
             - name: COOKIE_SECRET
-              value: {{ .Values.cookie.secret | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "auth-core.cookie.secretName" . }}
+                  key: secret
             - name: SESSION_NAME
               value: {{ .Values.session.name | quote }}
             - name: SESSION_TIMEOUT
               value: {{ .Values.session.timeout | quote }}
             - name: AUTO_MAILER_URL
-              value: {{ .Values.auto_mailer.url | quote }}
+              value: {{ include "auth-core.auto_mailer.url" . | quote }}
             - name: VERIFY_EMAIL_URL
               value: {{ .Values.auto_mailer.verify_email_url | quote }}
             - name: DATABASE_URL

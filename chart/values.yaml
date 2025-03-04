@@ -11,7 +11,7 @@ image:
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  tag: "1.0.0"
   port: 3000
 
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
@@ -142,6 +142,7 @@ database:
 redis:
   host: "localhost"
   port: 6379
+  password: ""
 
 cors:
   origin: "https://auth.mandacode.com"
@@ -149,20 +150,22 @@ cors:
 cookie:
   domain: "mandacode.com"
   secret: ""
+  secretName: ""
 
 session:
   name: "SID"
   timeout: 86400
 
 auto_mailer:
-  url: ""
+  host: ""
+  port: 50051
   verify_email_url: "https://auth.mandacode.com/auth/local/verify-email"
 
 jwt:
   access:
     public: ""
     private: ""
-    secretName: "mc-jwt-access-secret"
+    secretName: ""
     expires_in: "15m"
   refresh:
     public: ""
