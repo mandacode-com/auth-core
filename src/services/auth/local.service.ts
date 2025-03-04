@@ -169,7 +169,7 @@ export class AuthLocalService {
     });
 
     if (!tempUser) {
-      throw new BadRequestException('Invalid token');
+      throw new BadRequestException('Temporary user not found');
     }
 
     const randomUuid = crypto.randomUUID();
