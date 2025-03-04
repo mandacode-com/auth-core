@@ -34,6 +34,7 @@ export class TokenService {
     return this.jwtService.signAsync(payload, {
       privateKey: this.jwtConfig.access.private,
       expiresIn: this.jwtConfig.access.expiresIn,
+      algorithm: 'RS256',
       ...options,
     });
   }
@@ -51,6 +52,7 @@ export class TokenService {
     return this.jwtService
       .verifyAsync<AccessTokenPayload>(accessToken, {
         publicKey: this.jwtConfig.access.public,
+        algorithms: ['RS256'],
         ...options,
       })
       .then(async (payload) => {
@@ -73,6 +75,7 @@ export class TokenService {
     return this.jwtService.signAsync(payload, {
       privateKey: this.jwtConfig.refresh.private,
       expiresIn: this.jwtConfig.refresh.expiresIn,
+      algorithm: 'RS256',
       ...options,
     });
   }
@@ -90,6 +93,7 @@ export class TokenService {
     return this.jwtService
       .verifyAsync<RefreshTokenPayload>(refreshToken, {
         publicKey: this.jwtConfig.refresh.public,
+        algorithms: ['RS256'],
         ...options,
       })
       .then(async (payload) => {
@@ -112,6 +116,7 @@ export class TokenService {
     return this.jwtService.signAsync(payload, {
       privateKey: this.jwtConfig.emailVerification.private,
       expiresIn: this.jwtConfig.emailVerification.expiresIn,
+      algorithm: 'RS256',
       ...options,
     });
   }
@@ -128,6 +133,7 @@ export class TokenService {
     return this.jwtService
       .verifyAsync<EmailConfrimationTokenPayload>(verifyEmailToken, {
         publicKey: this.jwtConfig.emailVerification.public,
+        algorithms: ['RS256'],
         ...options,
       })
       .then(async (payload) => {
