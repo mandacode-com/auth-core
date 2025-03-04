@@ -15,6 +15,9 @@ RUN npm ci
 # Copy source files
 COPY . .
 
+# Copy Prisma migrations
+COPY prisma ./prisma
+
 # Generate Prisma Client
 RUN npx prisma generate
 
@@ -39,6 +42,9 @@ RUN npm prune --production
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
+# Copy Prisma migrations
+COPY --from=builder /app/prisma ./prisma
+
 # =============================
 # 3. Final Runtime Stage
 # =============================
@@ -58,6 +64,9 @@ COPY package.json ./
 # Copy Prisma Client
 COPY --from=pruner /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=pruner /app/node_modules/@prisma ./node_modules/@prisma
+
+# Copy Prisma migrations
+COPY --from=pruner /app/prisma ./prisma
 
 # Expose application port
 EXPOSE 3000
