@@ -23,12 +23,11 @@ model AuthAccount {
 }
 
 model OAuthAccount {
-  id           Int      @id @default(autoincrement())
-  userId       Int      @map("user_id")
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  provider     Provider
-  accessToken  String?  @map("access_token") @db.VarChar(256)
-  refreshToken String?  @map("refresh_token") @db.VarChar(256)
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider   Provider
+  providerId String   @map("provider_id") @db.VarChar(256)
 
   @@map("oauth_account")
   @@schema("auth")
