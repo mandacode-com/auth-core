@@ -81,6 +81,12 @@ export const configSchema = z.object({
       refresh: z.boolean().default(true),
     }),
   }),
+  oauth: z.object({
+    google: z.object({
+      clientId: z.string(),
+      clientSecret: z.string(),
+    }),
+  }),
 });
 
 export type Config = z.infer<typeof configSchema>;

@@ -79,6 +79,12 @@ export function validate(raw: Record<string, unknown>) {
         refresh: parseBoolean(raw.SERVICE_TOKEN_REFRESH as string) as boolean,
       },
     },
+    oauth: {
+      google: {
+        clientId: raw.OAUTH_GOOGLE_CLIENT_ID as string,
+        clientSecret: raw.OAUTH_GOOGLE_CLIENT_SECRET as string,
+      },
+    },
   };
 
   const parsedEnv = configSchema.parse(env);
