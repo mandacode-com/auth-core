@@ -63,23 +63,7 @@ service:
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
-  enabled: true
-  className: "kong"
-  annotations:
-    {
-      kubernetes.io/ingress.class: "kong",
-      konghq.com/strip-path: "true",
-      argoproj.io/expect-ingresses: "false",
-    }
-  hosts:
-    - host: auth.mandacode.com
-      paths:
-        - path: /api/core
-          pathType: ImplementationSpecific
-  tls:
-    - secretName: mandacode-tls
-      hosts:
-        - auth.mandacode.com
+  enabled: false
 
 resources:
   {}
