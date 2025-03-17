@@ -9,7 +9,7 @@ import { PrismaService } from '../prisma.service';
 import { randomBytes } from 'crypto';
 import { TokenService } from '../token.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { TempUser, UserRole } from '@prisma/client';
+import { TempUser } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { Config } from 'src/schemas/config.schema';
 import ms from 'ms';
@@ -218,11 +218,14 @@ export class AuthLocalService {
   /**
    * @description Login
    * @param {{ loginId: string; password: string }} data Login ID, password
-   * @returns {Promise<{ uuid: string }>}
+   * @returns {Promise<{
+   *   accessToken: string;
+   *   refreshToken: string;
+   *   }>
    */
   async login(data: { loginId: string; password: string }): Promise<{
-    uuid: string;
-    role: UserRole;
+    accessToken: string;
+    refreshToken: string;
   }> {
     const authAccount = await this.prisma.authAccount.findUnique({
       select: {
@@ -252,9 +255,20 @@ export class AuthLocalService {
       throw new UnauthorizedException('Email or password is incorrect');
     }
 
+    const [accessToken, refreshToken] = await Promise.all([
+      this.tokenService.accessToken({
+        uuid: authAccount.user.uuid,
+        role: authAccount.user.role,
+      }),
+      this.tokenService.refreshToken({
+        uuid: authAccount.user.uuid,
+        role: authAccount.user.role,
+      }),
+    ]);
+
     return {
-      uuid: authAccount.user.uuid,
-      role: authAccount.user.role,
+      accessToken,
+      refreshToken,
     };
   }
 }

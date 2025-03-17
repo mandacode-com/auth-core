@@ -13,6 +13,22 @@ import { TokenService } from 'src/services/token.service';
 export class TokenController {
   constructor(private readonly tokenService: TokenService) {}
 
+  @Get('verify')
+  @HttpCode(200)
+  async verify(@Req() req: Request): Promise<ResponseData> {
+    const accessToken = req.headers.authorization?.split(' ')[1];
+
+    if (!accessToken) {
+      throw new NotFoundException('access token not found');
+    }
+
+    await this.tokenService.verifyAccessToken(accessToken);
+
+    return {
+      message: 'success',
+    };
+  }
+
   @Get('refresh')
   @HttpCode(200)
   async refresh(@Req() req: Request): Promise<

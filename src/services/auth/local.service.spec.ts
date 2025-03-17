@@ -13,7 +13,7 @@ import {
 } from 'test/singleton';
 import { PrismaService } from '../prisma.service';
 import { randomBytes } from 'crypto';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import ms from 'ms';
 
 describe('local.service.spec.ts', () => {
@@ -131,17 +131,21 @@ describe('local.service.spec.ts', () => {
     it('should login', async () => {
       const loginId = mockAuthAccount.loginId;
       const password = mockPassword;
+      const mockAccessToken = randomBytes(8).toString('hex');
+      const mockRefreshToken = randomBytes(8).toString('hex');
 
       prismaMock.authAccount.findUnique.mockResolvedValue({
         ...mockAuthAccount,
         user: mockUser,
       } as AuthAccount);
+      tokenServiceMock.accessToken.mockResolvedValue(mockAccessToken);
+      tokenServiceMock.refreshToken.mockResolvedValue(mockRefreshToken);
 
       const result = await service.login({ loginId, password });
 
       expect(result).toEqual({
-        uuid: mockUser.uuid,
-        role: mockUser.role,
+        accessToken: mockAccessToken,
+        refreshToken: mockRefreshToken,
       });
     });
   });

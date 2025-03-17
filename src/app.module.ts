@@ -6,6 +6,7 @@ import { AuthLocalModule } from './modules/auth/local.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { TokenModule } from './modules/token.module';
 import { AppController } from './app.controller';
+import { GoogleOauthModule } from './modules/auth/oauth/google.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { AppController } from './app.controller';
     AuthLocalModule,
     SessionModule,
     TokenModule,
+    GoogleOauthModule,
   ],
   controllers: [AppController],
 })

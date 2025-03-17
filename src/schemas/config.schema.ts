@@ -83,8 +83,21 @@ export const configSchema = z.object({
   }),
   oauth: z.object({
     google: z.object({
+      endpoints: z.object({
+        auth: z
+          .string()
+          .url()
+          .default('https://accounts.google.com/o/oauth2/v2/auth'),
+        token: z.string().url().default('https://oauth2.googleapis.com/token'),
+        profile: z
+          .string()
+          .url()
+          .default('https://www.googleapis.com/oauth2/v1/userinfo'),
+      }),
       clientId: z.string(),
       clientSecret: z.string(),
+      redirectUri: z.string(),
+      grantType: z.string().default('authorization_code'),
     }),
   }),
 });

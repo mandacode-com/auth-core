@@ -81,8 +81,15 @@ export function validate(raw: Record<string, unknown>) {
     },
     oauth: {
       google: {
+        endpoints: {
+          token: raw.OAUTH_GOOGLE_ENDPOINT_TOKEN as string,
+          profile: raw.OAUTH_GOOGLE_ENDPOINT_PROFILE as string,
+          auth: raw.OAUTH_GOOGLE_ENDPOINT_AUTH as string,
+        },
         clientId: raw.OAUTH_GOOGLE_CLIENT_ID as string,
         clientSecret: raw.OAUTH_GOOGLE_CLIENT_SECRET as string,
+        redirectUri: raw.OAUTH_GOOGLE_REDIRECT_URI as string,
+        grantType: raw.OAUTH_GOOGLE_GRANT_TYPE as string,
       },
     },
   };

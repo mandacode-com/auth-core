@@ -1,33 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { Provider, User, UserRole } from '@prisma/client';
+import { Provider, User } from '@prisma/client';
 
 @Injectable()
 export class OauthService {
   constructor(private readonly prisma: PrismaService) {}
-
-  /**
-   * @description Log in with OAuth
-   * @param {{
-   *   provider: Provider;
-   *   providerId: string;
-   *   }} data Provider and provider ID
-   *   @returns {Promise<{
-   *   uuid: string;
-   *   role: UserRole;
-   *   }>} UUID and role
-   */
-  async login(data: { provider: Provider; providerId: string }): Promise<{
-    uuid: string;
-    role: UserRole;
-  }> {
-    const user = await this.getUser(data);
-
-    return {
-      uuid: user.uuid,
-      role: user.role,
-    };
-  }
 
   /**
    * @description Get a user
