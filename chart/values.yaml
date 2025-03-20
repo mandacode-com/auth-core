@@ -116,17 +116,10 @@ tolerations: []
 affinity: {}
 
 database:
-  host: "localhost"
-  port: 5432
-  name: "auth"
-  auth:
-    username: "postgres"
-    password: "postgres"
+  url: "postgresql://postgres:postgres@localhost:5432/auth"
 
-redis:
-  host: "localhost"
-  port: 6379
-  password: ""
+session_storage:
+  url: "redis://localhost:6379"
 
 cors:
   origin: "https://auth.mandacode.com"
@@ -141,8 +134,7 @@ session:
   timeout: 86400
 
 auto_mailer:
-  host: ""
-  port: 50051
+  url: ""
   verify_email_url: "https://auth.mandacode.com/auth/local/verify-email"
 
 jwt:

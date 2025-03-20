@@ -62,27 +62,31 @@ Create the name of the service account to use
 {{- end }}
 
 {{/*
-  Auto mailer
+  Config Map name 
 */}}
-{{- define "auth-core.auto_mailer.url" -}}
-{{ printf "%s:%s" .Values.auto_mailer.host (toString .Values.auto_mailer.port) }}
+{{- define "auth-core.configName" -}}
+{{ printf "%s-config" .Release.Name }}
 {{- end -}}
 
 {{/*
   Database
 */}}
-{{- define "auth-core.database.url" -}}
-{{ printf "postgresql://%s:%s@%s:%s/%s" .Values.database.auth.username .Values.database.auth.password .Values.database.host (toString .Values.database.port) .Values.database.name }}
+{{- define "auth-core.database.secretName" -}}
+{{- if .Values.database.secretName -}}
+{{ .Values.database.secretName }}
+{{- else -}}
+{{ printf "%s-database-secret" .Release.Name }}
+{{- end -}}
 {{- end -}}
 
 {{/*
-  Redis session store
+  Session Store
 */}}
-{{- define "auth-core.redis.url" -}}
-{{- if .Values.redis.password -}}
-{{ printf "redis://:%s@%s:%s" .Values.redis.password .Values.redis.host (toString .Values.redis.port) }}
+{{- define "auth-core.session_storage.secretName" -}}
+{{- if .Values.session_storage.secretName -}}
+{{ .Values.session_storage.secretName }}
 {{- else -}}
-{{ printf "redis://%s:%s" .Values.redis.host (toString .Values.redis.port) }}
+# {{ printf "%s-session-storage-secret" .Release.Name }}
 {{- end -}}
 {{- end -}}
 

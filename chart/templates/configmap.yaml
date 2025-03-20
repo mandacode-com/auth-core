@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "auth-core.configName" . }}
+  labels:
+    {{- include "auth-core.labels" . | nindent 4 }}
+data:
+  PORT: {{ .Values.image.port | quote }}
+  CORS_ORIGIN: {{ .Values.cors.origin | quote }}
+  COOKIE_DOMAIN: {{ .Values.cookie.domain | quote }}
+  SESSION_NAME: {{ .Values.session.name | quote }}
+  SESSION_TIMEOUT: {{ .Values.session.timeout | quote }}
+  AUTO_MAILER_URL: {{ .Values.auto_mailer.url | quote }}
+  VERIFY_EMAIL_URL: {{ .Values.auto_mailer.verify_email_url | quote }}
+  JWT_EXPIRES_IN_ACCESS: {{ .Values.jwt.access.expires_in | quote }}
+  JWT_EXPIRES_IN_REFRESH: {{ .Values.jwt.refresh.expires_in | quote }}
+  JWT_EXPIRES_IN_EMAIL_VERIFICATION: {{ .Values.jwt.email_verification.expires_in | quote }}

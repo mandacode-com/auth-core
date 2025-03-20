@@ -39,7 +39,10 @@ spec:
           command: ["npx", "prisma", "migrate", "deploy"]
           env:
             - name: DATABASE_URL
-              value: {{ include "auth-core.database.url" . | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "auth-core.database.secretName" . }}
+                  key: url
       containers:
         - name: {{ .Chart.Name }}
           {{- with .Values.securityContext }}
@@ -69,30 +72,25 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
 
+          envFrom:
+            - configMapRef:
+                name: {{ include "auth-core.configName" . }}
           env:
-            - name: PORT
-              value: {{ .Values.image.port | quote }}
-            - name: CORS_ORIGIN
-              value: {{ .Values.cors.origin | quote }}
-            - name: COOKIE_DOMAIN
-              value: {{ .Values.cookie.domain | quote }}
             - name: COOKIE_SECRET
               valueFrom:
                 secretKeyRef:
                   name: {{ include "auth-core.cookie.secretName" . }}
                   key: secret
-            - name: SESSION_NAME
-              value: {{ .Values.session.name | quote }}
-            - name: SESSION_TIMEOUT
-              value: {{ .Values.session.timeout | quote }}
-            - name: AUTO_MAILER_URL
-              value: {{ include "auth-core.auto_mailer.url" . | quote }}
-            - name: VERIFY_EMAIL_URL
-              value: {{ .Values.auto_mailer.verify_email_url | quote }}
             - name: DATABASE_URL
-              value: {{ include "auth-core.database.url" . | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "auth-core.database.secretName" . }}
+                  key: url
             - name: SESSION_STORAGE_URL
-              value: {{ include "auth-core.redis.url" . | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "auth-core.session_storage.secretName" . }}
+                  key: url
             - name: JWT_PUBLIC_ACCESS
               valueFrom:
                 secretKeyRef:
@@ -103,8 +101,6 @@ spec:
                 secretKeyRef:
                   name: {{ include "auth-core.jwt.access.secretName" . }}
                   key: private
-            - name: JWT_EXPIRES_IN_ACCESS
-              value: {{ .Values.jwt.access.expires_in | quote }}
             - name: JWT_PUBLIC_REFRESH
               valueFrom:
                 secretKeyRef:
@@ -115,8 +111,6 @@ spec:
                 secretKeyRef:
                   name: {{ include "auth-core.jwt.refresh.secretName" . }}
                   key: private
-            - name: JWT_EXPIRES_IN_REFRESH
-              value: {{ .Values.jwt.refresh.expires_in | quote }}
             - name: JWT_PUBLIC_EMAIL_VERIFICATION
               valueFrom:
                 secretKeyRef:
@@ -127,8 +121,6 @@ spec:
                 secretKeyRef:
                   name: {{ include "auth-core.jwt.email_verification.secretName" . }}
                   key: private
-            - name: JWT_EXPIRES_IN_EMAIL_VERIFICATION
-              value: {{ .Values.jwt.email_verification.expires_in | quote }}
 
       {{- with .Values.volumes }}
       volumes:
