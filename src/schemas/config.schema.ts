@@ -26,7 +26,11 @@ export const configSchema = z.object({
   session: z.object({
     name: z.string().default('sid'),
     timeout: z.number().int().positive().default(3600),
-    storageUrl: z.string().default('redis://localhost:6379'),
+    storage: z.object({
+      host: z.string().default('localhost'),
+      port: z.number().int().positive().default(6379),
+      password: z.string().default(''),
+    }),
   }),
   jwt: z.object({
     access: z.object({

@@ -28,7 +28,11 @@ export function validate(raw: Record<string, unknown>) {
     session: {
       name: raw.SESSION_NAME as string,
       timeout: parseInt(raw.SESSION_TIMEOUT as string),
-      storageUrl: raw.SESSION_STORAGE_URL as string,
+      storage: {
+        host: raw.SESSION_STORAGE_HOST as string,
+        port: parseInt(raw.SESSION_STORAGE_PORT as string),
+        password: raw.SESSION_STORAGE_PASSWORD as string,
+      },
     },
     jwt: {
       access: {

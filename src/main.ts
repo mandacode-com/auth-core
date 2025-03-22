@@ -52,7 +52,11 @@ async function bootstrap() {
   ) {
     // Redis session store
     const redisClient = await createClient({
-      url: config.get<Config['session']>('session').storageUrl,
+      socket: {
+        host: config.get<Config['session']>('session').storage.host,
+        port: config.get<Config['session']>('session').storage.port,
+      },
+      password: config.get<Config['session']>('session').storage.password,
     })
       .connect()
       .catch((error) => {
