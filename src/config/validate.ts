@@ -95,6 +95,28 @@ export function validate(raw: Record<string, unknown>) {
         redirectUri: raw.OAUTH_GOOGLE_REDIRECT_URI as string,
         grantType: raw.OAUTH_GOOGLE_GRANT_TYPE as string,
       },
+      naver: {
+        endpoints: {
+          token: raw.OAUTH_NAVER_ENDPOINT_TOKEN as string,
+          profile: raw.OAUTH_NAVER_ENDPOINT_PROFILE as string,
+          auth: raw.OAUTH_NAVER_ENDPOINT_AUTH as string,
+        },
+        clientId: raw.OAUTH_NAVER_CLIENT_ID as string,
+        clientSecret: raw.OAUTH_NAVER_CLIENT_SECRET as string,
+        redirectUri: raw.OAUTH_NAVER_REDIRECT_URI as string,
+        grantType: raw.OAUTH_NAVER_GRANT_TYPE as string,
+      },
+      kakao: {
+        endpoints: {
+          token: raw.OAUTH_KAKAO_ENDPOINT_TOKEN as string,
+          profile: raw.OAUTH_KAKAO_ENDPOINT_PROFILE as string,
+          auth: raw.OAUTH_KAKAO_ENDPOINT_AUTH as string,
+        },
+        clientId: raw.OAUTH_KAKAO_CLIENT_ID as string,
+        clientSecret: raw.OAUTH_KAKAO_CLIENT_SECRET as string,
+        redirectUri: raw.OAUTH_KAKAO_REDIRECT_URI as string,
+        grantType: raw.OAUTH_KAKAO_GRANT_TYPE as string,
+      },
     },
   };
 

@@ -103,6 +103,37 @@ export const configSchema = z.object({
       redirectUri: z.string(),
       grantType: z.string().default('authorization_code'),
     }),
+    kakao: z.object({
+      endpoints: z.object({
+        auth: z
+          .string()
+          .url()
+          .default('https://kauth.kakao.com/oauth/authorize'),
+        token: z.string().url().default('https://kauth.kakao.com/oauth/token'),
+        profile: z.string().url().default('https://kapi.kakao.com/v2/user/me'),
+      }),
+      clientId: z.string(),
+      clientSecret: z.string(),
+      redirectUri: z.string(),
+      grantType: z.string().default('authorization_code'),
+    }),
+    naver: z.object({
+      endpoints: z.object({
+        auth: z
+          .string()
+          .url()
+          .default('https://nid.naver.com/oauth2.0/authorize'),
+        token: z.string().url().default('https://nid.naver.com/oauth2.0/token'),
+        profile: z
+          .string()
+          .url()
+          .default('https://openapi.naver.com/v1/nid/me'),
+      }),
+      clientId: z.string(),
+      clientSecret: z.string(),
+      redirectUri: z.string(),
+      grantType: z.string().default('authorization_code'),
+    }),
   }),
 });
 
