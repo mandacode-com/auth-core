@@ -1,13 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Config } from 'src/schemas/config.schema';
 import { OauthService } from './oauth.service';
 import { TokenService } from '../token.service';
-import { GoogleProfile } from 'src/interfaces/oauth.interface';
 import { Provider } from '@prisma/client';
+import { NaverProfile } from 'src/schemas/oauth.schema';
+import { OauthImpl } from './oauth_impl';
 
 @Injectable()
-export class NaverOauthService {
+export class NaverOauthService implements OauthImpl {
   private readonly naverConfig: Config['oauth']['naver'];
 
   constructor(
@@ -38,21 +44,29 @@ export class NaverOauthService {
       method: 'POST',
     });
     if (!response.ok) {
-      throw new Error('Invalid code');
+      throw new UnauthorizedException('Invalid code');
     }
 
-    return (await response.json()) as {
-      accessToken: string;
-      refreshToken: string;
+    const data = (await response.json()) as {
+      access_token: string | undefined;
+      refresh_token: string | undefined;
+    };
+
+    if (!data.access_token || !data.refresh_token) {
+      throw new UnauthorizedException('Invalid code');
+    }
+
+    return {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
     };
   }
 
   /**
    * @description Get a profile
    * @param {string} accessToken
-   * @returns {Promise<any>}
    */
-  async getProfile(accessToken: string): Promise<GoogleProfile> {
+  async getProfile(accessToken: string) {
     const endpoint = this.naverConfig.endpoints.profile;
     const url = `${endpoint}?access_token=${accessToken}`;
 
@@ -62,7 +76,17 @@ export class NaverOauthService {
       throw new Error('Invalid access token');
     }
 
-    return (await response.json()) as GoogleProfile;
+    const data = (await response.json()) as NaverProfile;
+
+    if (data.resultcode !== '00') {
+      throw new UnauthorizedException('Invalid access token');
+    }
+
+    return {
+      id: data.response.id,
+      email: data.response.email,
+      nickname: data.response.nickname,
+    };
   }
 
   /**
@@ -84,10 +108,10 @@ export class NaverOauthService {
       .catch(async (error) => {
         if (error instanceof NotFoundException) {
           return await this.oauthService.createUser({
-            provider: Provider.GOOGLE,
+            provider: Provider.NAVER,
             providerId: profile.id,
             email: profile.email,
-            nickname: profile.name,
+            nickname: profile.nickname,
           });
         }
 
@@ -115,7 +139,7 @@ export class NaverOauthService {
    * @description Get the login URL
    * @returns {string}
    */
-  loginUrl(): string {
+  getLoginUrl(): string {
     const clientId = this.naverConfig.clientId;
     const redirectUri = this.naverConfig.redirectUri;
     const endpoint = this.naverConfig.endpoints.auth;

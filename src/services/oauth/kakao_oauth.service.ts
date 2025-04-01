@@ -4,17 +4,15 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  GoogleAccessToken,
-  GoogleProfile,
-} from 'src/interfaces/oauth.interface';
 import { Config } from 'src/schemas/config.schema';
 import { OauthService } from './oauth.service';
 import { Provider } from '@prisma/client';
 import { TokenService } from '../token.service';
+import { KakaoAccessToken, KakaoProfile } from 'src/schemas/oauth.schema';
+import { OauthImpl } from './oauth_impl';
 
 @Injectable()
-export class KakaoOauthService {
+export class KakaoOauthService implements OauthImpl {
   private readonly kakaoConfig: Config['oauth']['kakao'];
 
   constructor(
@@ -28,9 +26,9 @@ export class KakaoOauthService {
   /**
    * @description Get an access token
    * @param {string} code
-   * @returns {Promise<GoogleAccessToken>}
+   * @returns {Promise<{ accessToken: string }>}
    */
-  async getAccessToken(code: string): Promise<GoogleAccessToken> {
+  async getAccessToken(code: string): Promise<{ accessToken: string }> {
     const clientId = this.kakaoConfig.clientId;
     const clientSecret = this.kakaoConfig.clientSecret;
     const redirectUri = this.kakaoConfig.redirectUri;
@@ -46,15 +44,17 @@ export class KakaoOauthService {
       throw new UnauthorizedException('Invalid code');
     }
 
-    return (await response.json()) as GoogleAccessToken;
+    // return (await response.json()) as KakaoAccessToken;
+    const data = (await response.json()) as KakaoAccessToken;
+    return {
+      accessToken: data.access_token,
+    };
   }
 
   /**
    * @description Get a profile
-   * @param {string} accessToken
-   * @returns {Promise<GoogleProfile>}
    */
-  async getProfile(accessToken: string): Promise<GoogleProfile> {
+  async getProfile(accessToken: string) {
     const endpoint = this.kakaoConfig.endpoints.profile;
     const url = `${endpoint}?access_token=${accessToken}`;
 
@@ -64,7 +64,12 @@ export class KakaoOauthService {
       throw new UnauthorizedException('Invalid access token');
     }
 
-    return (await response.json()) as GoogleProfile;
+    const data = (await response.json()) as KakaoProfile;
+    return {
+      id: data.sub,
+      email: undefined,
+      nickname: data.nickname,
+    };
   }
 
   /**
@@ -79,12 +84,12 @@ export class KakaoOauthService {
     accessToken: string;
     refreshToken: string;
   }> {
-    const { access_token } = await this.getAccessToken(code);
-    const profile = await this.getProfile(access_token);
+    const { accessToken: OauthAccessToken } = await this.getAccessToken(code);
+    const profile = await this.getProfile(OauthAccessToken);
 
     const existingUser = await this.oauthService
       .getUser({
-        provider: Provider.GOOGLE,
+        provider: Provider.KAKAO,
         providerId: profile.id,
       })
       .catch(async (error) => {
@@ -93,7 +98,7 @@ export class KakaoOauthService {
             provider: Provider.GOOGLE,
             providerId: profile.id,
             email: profile.email,
-            nickname: profile.name,
+            nickname: profile.nickname,
           });
         }
 
@@ -117,7 +122,7 @@ export class KakaoOauthService {
     };
   }
 
-  loginUrl(): string {
+  getLoginUrl(): string {
     const clientId = this.kakaoConfig.clientId;
     const redirectUri = this.kakaoConfig.redirectUri;
     const endpoint = this.kakaoConfig.endpoints.auth;

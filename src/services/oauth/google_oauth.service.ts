@@ -4,17 +4,15 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  GoogleAccessToken,
-  GoogleProfile,
-} from 'src/interfaces/oauth.interface';
 import { Config } from 'src/schemas/config.schema';
 import { OauthService } from './oauth.service';
 import { Provider } from '@prisma/client';
 import { TokenService } from '../token.service';
+import { GoogleAccessToken, GoogleProfile } from 'src/schemas/oauth.schema';
+import { OauthImpl } from './oauth_impl';
 
 @Injectable()
-export class GoogleOauthService {
+export class GoogleOauthService implements OauthImpl {
   private readonly googleConfig: Config['oauth']['google'];
 
   constructor(
@@ -28,9 +26,12 @@ export class GoogleOauthService {
   /**
    * @description Get an access token
    * @param {string} code
-   * @returns {Promise<GoogleAccessToken>}
+   * @returns {Promise<{ accessToken: string }>}
+   * @throws {UnauthorizedException} Invalid code
    */
-  async getAccessToken(code: string): Promise<GoogleAccessToken> {
+  async getAccessToken(code: string): Promise<{
+    accessToken: string;
+  }> {
     const clientId = this.googleConfig.clientId;
     const clientSecret = this.googleConfig.clientSecret;
     const redirectUri = this.googleConfig.redirectUri;
@@ -46,7 +47,10 @@ export class GoogleOauthService {
       throw new UnauthorizedException('Invalid code');
     }
 
-    return (await response.json()) as GoogleAccessToken;
+    const data = (await response.json()) as GoogleAccessToken;
+    return {
+      accessToken: data.access_token,
+    };
   }
 
   /**
@@ -54,7 +58,11 @@ export class GoogleOauthService {
    * @param {string} accessToken
    * @returns {Promise<GoogleProfile>}
    */
-  async getProfile(accessToken: string): Promise<GoogleProfile> {
+  async getProfile(accessToken: string): Promise<{
+    id: string;
+    email: string;
+    nickname: string;
+  }> {
     const endpoint = this.googleConfig.endpoints.profile;
     const url = `${endpoint}?access_token=${accessToken}`;
 
@@ -64,7 +72,13 @@ export class GoogleOauthService {
       throw new UnauthorizedException('Invalid access token');
     }
 
-    return (await response.json()) as GoogleProfile;
+    const data = (await response.json()) as GoogleProfile;
+
+    return {
+      id: data.id,
+      email: data.email,
+      nickname: data.name,
+    };
   }
 
   /**
@@ -79,8 +93,8 @@ export class GoogleOauthService {
     accessToken: string;
     refreshToken: string;
   }> {
-    const { access_token } = await this.getAccessToken(code);
-    const profile = await this.getProfile(access_token);
+    const { accessToken: OauthAccessToken } = await this.getAccessToken(code);
+    const profile = await this.getProfile(OauthAccessToken);
 
     const existingUser = await this.oauthService
       .getUser({
@@ -93,7 +107,7 @@ export class GoogleOauthService {
             provider: Provider.GOOGLE,
             providerId: profile.id,
             email: profile.email,
-            nickname: profile.name,
+            nickname: profile.nickname,
           });
         }
 
@@ -117,7 +131,7 @@ export class GoogleOauthService {
     };
   }
 
-  loginUrl(): string {
+  getLoginUrl(): string {
     const clientId = this.googleConfig.clientId;
     const redirectUri = this.googleConfig.redirectUri;
     const endpoint = this.googleConfig.endpoints.auth;
