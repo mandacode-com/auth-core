@@ -9,7 +9,7 @@ export class NaverOauthController {
   @Get('login')
   login(): { url: string } {
     return {
-      url: this.naverOauth.loginUrl(),
+      url: this.naverOauth.getLoginUrl(),
     };
   }
 

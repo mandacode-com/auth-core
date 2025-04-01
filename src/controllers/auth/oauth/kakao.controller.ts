@@ -9,7 +9,7 @@ export class KakaoOauthController {
   @Get('login')
   login(): { url: string } {
     return {
-      url: this.kakaoOauth.loginUrl(),
+      url: this.kakaoOauth.getLoginUrl(),
     };
   }
 

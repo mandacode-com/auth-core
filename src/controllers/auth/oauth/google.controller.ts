@@ -9,7 +9,7 @@ export class GoogleOauthController {
   @Get('login')
   login(): { url: string } {
     return {
-      url: this.googleOauth.loginUrl(),
+      url: this.googleOauth.getLoginUrl(),
     };
   }
 
