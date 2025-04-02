@@ -16,6 +16,7 @@ model AuthAccount {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   loginId   String   @unique @map("login_id") @db.VarChar(256)
   password  String   @db.VarChar(256)
+  email     String   @unique @db.VarChar(256)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@map("auth_account")
@@ -26,9 +27,12 @@ model OAuthAccount {
   id         Int      @id @default(autoincrement())
   userId     Int      @map("user_id")
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email      String?  @unique @db.VarChar(256)
   provider   Provider
   providerId String   @map("provider_id") @db.VarChar(256)
 
+  @@unique([provider, providerId])
+  @@unique([provider, email])
   @@map("oauth_account")
   @@schema("auth")
 }
@@ -36,7 +40,6 @@ model OAuthAccount {
 model User {
   id            Int            @id @default(autoincrement())
   uuid          String         @unique @db.Uuid
-  email         String?        @unique @db.VarChar(256)
   role          UserRole       @default(USER)
   authAccount   AuthAccount?
   oauthAccounts OAuthAccount[]

@@ -47,7 +47,7 @@ export class AuthLocalService {
 
     // Check if the email or login ID already exists
     const [existingEmail, existingLoginId] = await Promise.all([
-      this.prisma.user.findUnique({
+      this.prisma.authAccount.findUnique({
         select: {
           id: true,
         },
@@ -178,7 +178,6 @@ export class AuthLocalService {
       this.prisma.user.create({
         data: {
           uuid: randomUuid,
-          email: tempUser.email,
           profile: {
             create: {
               nickname: tempUser.nickname,
@@ -188,6 +187,7 @@ export class AuthLocalService {
             create: {
               loginId: tempUser.loginId,
               password: tempUser.password,
+              email: tempUser.email,
             },
           },
         },

@@ -55,9 +55,9 @@ export class OauthService {
     const randomUuid = crypto.randomUUID();
     const user = await this.prisma.user.create({
       data: {
-        email: data.email,
         oauthAccounts: {
           create: {
+            email: data.email,
             provider: data.provider,
             providerId: data.providerId,
           },
