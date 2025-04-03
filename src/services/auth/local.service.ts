@@ -9,7 +9,7 @@ import { PrismaService } from '../prisma.service';
 import { randomBytes } from 'crypto';
 import { TokenService } from '../token.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { TempUser, UserRole } from '@prisma/client';
+import { TempUser } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { Config } from 'src/schemas/config.schema';
 import ms from 'ms';
@@ -35,7 +35,7 @@ export class AuthLocalService {
    *    password: string;
    *    nickname?: string;
    *    }} data Email, login ID, password, nickname
-   * @returns {Promise<string>} Token
+   * @returns {Promise<string>} Email verification token
    */
   async createTempUser(data: {
     email: string;
@@ -47,7 +47,7 @@ export class AuthLocalService {
 
     // Check if the email or login ID already exists
     const [existingEmail, existingLoginId] = await Promise.all([
-      this.prisma.user.findUnique({
+      this.prisma.authAccount.findUnique({
         select: {
           id: true,
         },
@@ -104,7 +104,7 @@ export class AuthLocalService {
   /**
    * @description Resend the email verification code
    * @param {{ email: string }} data Email
-   * @returns {Promise<string>} Token
+   * @returns {Promise<string>} Regenerated email verification token
    */
   async resend(data: { email: string }): Promise<string> {
     const tempUser = await this.prisma.tempUser.findUnique({
@@ -151,7 +151,7 @@ export class AuthLocalService {
   /**
    * @description Verify the email
    * @param {{ token: string }} data Token
-   * @returns {Promise<{ uuid: string }>}
+   * @returns {Promise<{ uuid: string }>} User UUID
    */
   async verifyEmail(data: { token: string }): Promise<{
     uuid: string;
@@ -178,7 +178,6 @@ export class AuthLocalService {
       this.prisma.user.create({
         data: {
           uuid: randomUuid,
-          email: tempUser.email,
           profile: {
             create: {
               nickname: tempUser.nickname,
@@ -188,6 +187,7 @@ export class AuthLocalService {
             create: {
               loginId: tempUser.loginId,
               password: tempUser.password,
+              email: tempUser.email,
             },
           },
         },
@@ -218,11 +218,14 @@ export class AuthLocalService {
   /**
    * @description Login
    * @param {{ loginId: string; password: string }} data Login ID, password
-   * @returns {Promise<{ uuid: string }>}
+   * @returns {Promise<{
+   *   accessToken: string;
+   *   refreshToken: string;
+   *   }>
    */
   async login(data: { loginId: string; password: string }): Promise<{
-    uuid: string;
-    role: UserRole;
+    accessToken: string;
+    refreshToken: string;
   }> {
     const authAccount = await this.prisma.authAccount.findUnique({
       select: {
@@ -252,9 +255,20 @@ export class AuthLocalService {
       throw new UnauthorizedException('Email or password is incorrect');
     }
 
+    const [accessToken, refreshToken] = await Promise.all([
+      this.tokenService.accessToken({
+        uuid: authAccount.user.uuid,
+        role: authAccount.user.role,
+      }),
+      this.tokenService.refreshToken({
+        uuid: authAccount.user.uuid,
+        role: authAccount.user.role,
+      }),
+    ]);
+
     return {
-      uuid: authAccount.user.uuid,
-      role: authAccount.user.role,
+      accessToken,
+      refreshToken,
     };
   }
 }

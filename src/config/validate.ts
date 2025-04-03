@@ -28,7 +28,11 @@ export function validate(raw: Record<string, unknown>) {
     session: {
       name: raw.SESSION_NAME as string,
       timeout: parseInt(raw.SESSION_TIMEOUT as string),
-      storageUrl: raw.SESSION_STORAGE_URL as string,
+      storage: {
+        host: raw.SESSION_STORAGE_HOST as string,
+        port: parseInt(raw.SESSION_STORAGE_PORT as string),
+        password: raw.SESSION_STORAGE_PASSWORD as string,
+      },
     },
     jwt: {
       access: {
@@ -77,6 +81,41 @@ export function validate(raw: Record<string, unknown>) {
       },
       token: {
         refresh: parseBoolean(raw.SERVICE_TOKEN_REFRESH as string) as boolean,
+      },
+    },
+    oauth: {
+      google: {
+        endpoints: {
+          token: raw.OAUTH_GOOGLE_ENDPOINT_TOKEN as string,
+          profile: raw.OAUTH_GOOGLE_ENDPOINT_PROFILE as string,
+          auth: raw.OAUTH_GOOGLE_ENDPOINT_AUTH as string,
+        },
+        clientId: raw.OAUTH_GOOGLE_CLIENT_ID as string,
+        clientSecret: raw.OAUTH_GOOGLE_CLIENT_SECRET as string,
+        redirectUri: raw.OAUTH_GOOGLE_REDIRECT_URI as string,
+        grantType: raw.OAUTH_GOOGLE_GRANT_TYPE as string,
+      },
+      naver: {
+        endpoints: {
+          token: raw.OAUTH_NAVER_ENDPOINT_TOKEN as string,
+          profile: raw.OAUTH_NAVER_ENDPOINT_PROFILE as string,
+          auth: raw.OAUTH_NAVER_ENDPOINT_AUTH as string,
+        },
+        clientId: raw.OAUTH_NAVER_CLIENT_ID as string,
+        clientSecret: raw.OAUTH_NAVER_CLIENT_SECRET as string,
+        redirectUri: raw.OAUTH_NAVER_REDIRECT_URI as string,
+        grantType: raw.OAUTH_NAVER_GRANT_TYPE as string,
+      },
+      kakao: {
+        endpoints: {
+          token: raw.OAUTH_KAKAO_ENDPOINT_TOKEN as string,
+          profile: raw.OAUTH_KAKAO_ENDPOINT_PROFILE as string,
+          auth: raw.OAUTH_KAKAO_ENDPOINT_AUTH as string,
+        },
+        clientId: raw.OAUTH_KAKAO_CLIENT_ID as string,
+        clientSecret: raw.OAUTH_KAKAO_CLIENT_SECRET as string,
+        redirectUri: raw.OAUTH_KAKAO_REDIRECT_URI as string,
+        grantType: raw.OAUTH_KAKAO_GRANT_TYPE as string,
       },
     },
   };

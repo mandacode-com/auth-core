@@ -19,13 +19,11 @@ import {
 } from 'src/schemas/auth.schema';
 import { AuthLocalService } from 'src/services/auth/local.service';
 import { MailerService } from 'src/services/mailer.service';
-import { TokenService } from 'src/services/token.service';
 
 @Controller('auth/local')
 export class LocalController {
   constructor(
     private readonly authLocalService: AuthLocalService,
-    private readonly tokenService: TokenService,
     private readonly mailerService: MailerService,
   ) {}
 
@@ -108,22 +106,10 @@ export class LocalController {
       accessToken: string;
     }>
   > {
-    const user = await this.authLocalService.login({
+    const { accessToken, refreshToken } = await this.authLocalService.login({
       loginId: body.loginId,
       password: body.password,
     });
-
-    // Issue access token and refresh token
-    const [accessToken, refreshToken] = await Promise.all([
-      this.tokenService.accessToken({
-        uuid: user.uuid,
-        role: user.role,
-      }),
-      this.tokenService.refreshToken({
-        uuid: user.uuid,
-        role: user.role,
-      }),
-    ]);
 
     // Set refresh token in session
     req.session.refresh = refreshToken;

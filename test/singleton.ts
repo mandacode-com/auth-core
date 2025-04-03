@@ -28,7 +28,6 @@ const hashedPassword = bcrypt.hashSync(mockPassword, 10);
 const mockUser: User = {
   id: 1,
   uuid: crypto.randomUUID(),
-  email: 'test@test.com',
   role: UserRole.USER,
 };
 
@@ -36,6 +35,7 @@ const mockAuthAccount: AuthAccount = {
   id: 1,
   userId: mockUser.id,
   loginId: 'test',
+  email: 'test@test.com',
   password: hashedPassword,
   createdAt: new Date(),
 };
@@ -51,7 +51,7 @@ const mockProfile: Profile = {
 
 const mockTempUser: TempUser = {
   id: BigInt(1),
-  email: mockUser.email || 'test@test.com',
+  email: mockAuthAccount.email || 'test@test.com',
   nickname: mockProfile.nickname,
   loginId: mockAuthAccount.loginId,
   password: mockAuthAccount.password,

@@ -26,7 +26,11 @@ export const configSchema = z.object({
   session: z.object({
     name: z.string().default('sid'),
     timeout: z.number().int().positive().default(3600),
-    storageUrl: z.string().default('redis://localhost:6379'),
+    storage: z.object({
+      host: z.string().default('localhost'),
+      port: z.number().int().positive().default(6379),
+      password: z.string().default(''),
+    }),
   }),
   jwt: z.object({
     access: z.object({
@@ -79,6 +83,56 @@ export const configSchema = z.object({
     }),
     token: z.object({
       refresh: z.boolean().default(true),
+    }),
+  }),
+  oauth: z.object({
+    google: z.object({
+      endpoints: z.object({
+        auth: z
+          .string()
+          .url()
+          .default('https://accounts.google.com/o/oauth2/v2/auth'),
+        token: z.string().url().default('https://oauth2.googleapis.com/token'),
+        profile: z
+          .string()
+          .url()
+          .default('https://www.googleapis.com/oauth2/v3/userinfo'),
+      }),
+      clientId: z.string(),
+      clientSecret: z.string(),
+      redirectUri: z.string(),
+      grantType: z.string().default('authorization_code'),
+    }),
+    kakao: z.object({
+      endpoints: z.object({
+        auth: z
+          .string()
+          .url()
+          .default('https://kauth.kakao.com/oauth/authorize'),
+        token: z.string().url().default('https://kauth.kakao.com/oauth/token'),
+        profile: z.string().url().default('https://kapi.kakao.com/v2/user/me'),
+      }),
+      clientId: z.string(),
+      clientSecret: z.string(),
+      redirectUri: z.string(),
+      grantType: z.string().default('authorization_code'),
+    }),
+    naver: z.object({
+      endpoints: z.object({
+        auth: z
+          .string()
+          .url()
+          .default('https://nid.naver.com/oauth2.0/authorize'),
+        token: z.string().url().default('https://nid.naver.com/oauth2.0/token'),
+        profile: z
+          .string()
+          .url()
+          .default('https://openapi.naver.com/v1/nid/me'),
+      }),
+      clientId: z.string(),
+      clientSecret: z.string(),
+      redirectUri: z.string(),
+      grantType: z.string().default('authorization_code'),
     }),
   }),
 });
