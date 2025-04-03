@@ -8,7 +8,7 @@ import {
 } from '@prisma/client';
 import { DeepMockProxy, mockDeep, mockReset } from 'jest-mock-extended';
 import prisma from './client';
-import { randomBytes } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 import bcrypt from 'bcrypt';
 
 jest.mock('./client', () => ({
@@ -27,7 +27,7 @@ const hashedPassword = bcrypt.hashSync(mockPassword, 10);
 
 const mockUser: User = {
   id: 1,
-  uuid: crypto.randomUUID(),
+  uuid: randomUUID(),
   role: UserRole.USER,
 };
 

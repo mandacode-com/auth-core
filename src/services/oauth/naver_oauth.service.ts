@@ -5,29 +5,24 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Config } from 'src/schemas/config.schema';
-import { OauthService } from './oauth.service';
+import { OauthAccountService } from './oauth_account.service';
 import { TokenService } from '../token.service';
 import { Provider } from '@prisma/client';
 import { NaverProfile, naverProfileSchema } from 'src/schemas/oauth.schema';
-import { OauthImpl } from './oauth_impl';
+import { OauthService } from './oauth.service';
 
 @Injectable()
-export class NaverOauthService implements OauthImpl {
+export class NaverOauthService implements OauthService {
   private readonly naverConfig: Config['oauth']['naver'];
 
   constructor(
     private readonly config: ConfigService<Config, true>,
-    private readonly oauthService: OauthService,
+    private readonly oauthAccountService: OauthAccountService,
     private readonly tokenService: TokenService,
   ) {
     this.naverConfig = this.config.get<Config['oauth']>('oauth').naver;
   }
 
-  /**
-   * @description Get an access token
-   * @param {string} code
-   * @returns {Promise<{ accessToken: string; refreshToken: string }>}
-   */
   async getAccessToken(
     code: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
@@ -61,15 +56,6 @@ export class NaverOauthService implements OauthImpl {
     };
   }
 
-  /**
-   * @description Get a profile
-   * @param {string} accessToken
-   * @returns {Promise<{
-   *  id: string;
-   *  email: string;
-   *  nickname: string;
-   * }>}
-   */
   async getProfile(accessToken: string): Promise<{
     id: string;
     email: string;
@@ -99,25 +85,20 @@ export class NaverOauthService implements OauthImpl {
     };
   }
 
-  /**
-   * @description Login with Naver
-   * @param {string} code
-   * @returns {Promise<{ accessToken: string; refreshToken: string }>}
-   */
   async login(
     code: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const { accessToken: oauthAccessToken } = await this.getAccessToken(code);
     const profile = await this.getProfile(oauthAccessToken);
 
-    const existingUser = await this.oauthService
+    const existingUser = await this.oauthAccountService
       .getUser({
         provider: Provider.NAVER,
         providerId: profile.id,
       })
       .catch(async (error) => {
         if (error instanceof NotFoundException) {
-          return await this.oauthService.createUser({
+          return await this.oauthAccountService.createUser({
             provider: Provider.NAVER,
             providerId: profile.id,
             email: profile.email,
@@ -145,10 +126,6 @@ export class NaverOauthService implements OauthImpl {
     };
   }
 
-  /**
-   * @description Get the login URL
-   * @returns {string}
-   */
   getLoginUrl(): string {
     const clientId = this.naverConfig.clientId;
     const redirectUri = this.naverConfig.redirectUri;

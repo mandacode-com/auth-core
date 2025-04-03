@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma.service';
-import { randomBytes } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 import { TokenService } from '../token.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { TempUser } from '@prisma/client';
@@ -172,7 +172,7 @@ export class AuthLocalService {
       throw new BadRequestException('Temporary user not found');
     }
 
-    const randomUuid = crypto.randomUUID();
+    const randomUuid = randomUUID();
 
     const [createdUser, _deleteTemporaryUser] = await this.prisma.$transaction([
       this.prisma.user.create({
