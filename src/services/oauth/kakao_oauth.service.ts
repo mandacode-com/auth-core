@@ -57,8 +57,18 @@ export class KakaoOauthService implements OauthImpl {
 
   /**
    * @description Get a profile
+   * @param {string} accessToken
+   * @returns {Promise<{
+   *  id: string;
+   *  email: string;
+   *  nickname: string;
+   * }>}
    */
-  async getProfile(accessToken: string) {
+  async getProfile(accessToken: string): Promise<{
+    id: string;
+    email: string;
+    nickname: string;
+  }> {
     const endpoint = this.kakaoConfig.endpoints.profile;
     const url = `${endpoint}?access_token=${accessToken}`;
 
@@ -134,6 +144,10 @@ export class KakaoOauthService implements OauthImpl {
     };
   }
 
+  /**
+   * @description Get the login URL
+   * @returns {string}
+   */
   getLoginUrl(): string {
     const clientId = this.kakaoConfig.clientId;
     const redirectUri = this.kakaoConfig.redirectUri;

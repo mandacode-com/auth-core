@@ -1,6 +1,5 @@
 import {
   Injectable,
-  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -65,8 +64,17 @@ export class NaverOauthService implements OauthImpl {
   /**
    * @description Get a profile
    * @param {string} accessToken
+   * @returns {Promise<{
+   *  id: string;
+   *  email: string;
+   *  nickname: string;
+   * }>}
    */
-  async getProfile(accessToken: string) {
+  async getProfile(accessToken: string): Promise<{
+    id: string;
+    email: string;
+    nickname: string;
+  }> {
     const endpoint = this.naverConfig.endpoints.profile;
     const url = `${endpoint}?access_token=${accessToken}`;
 

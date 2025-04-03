@@ -60,7 +60,11 @@ export class GoogleOauthService implements OauthImpl {
   /**
    * @description Get a profile
    * @param {string} accessToken
-   * @returns {Promise<GoogleProfile>}
+   * @returns {Promise<{
+   *  id: string;
+   *  email: string;
+   *  nickname: string;
+   * }>}
    */
   async getProfile(accessToken: string): Promise<{
     id: string;
@@ -140,6 +144,10 @@ export class GoogleOauthService implements OauthImpl {
     };
   }
 
+  /**
+   * @description Get the login URL
+   * @returns {string}
+   */
   getLoginUrl(): string {
     const clientId = this.googleConfig.clientId;
     const redirectUri = this.googleConfig.redirectUri;

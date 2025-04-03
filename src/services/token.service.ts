@@ -24,8 +24,8 @@ export class TokenService {
   /**
    * @description Generate access token
    * @param {AccessTokenPayload} payload
+   * @param {JwtSignOptions} [options]
    * @returns {Promise<string>}
-   * @memberof TokenService
    */
   async accessToken(
     payload: AccessTokenPayload,
@@ -42,8 +42,8 @@ export class TokenService {
   /**
    * @description Verify access token
    * @param {string} accessToken
+   * @param {JwtVerifyOptions} [options]
    * @returns {Promise<AccessTokenPayload>}
-   * @memberof TokenService
    */
   async verifyAccessToken(
     accessToken: string,
@@ -65,8 +65,8 @@ export class TokenService {
   /**
    * @description Generate refresh token
    * @param {RefreshTokenPayload} payload
+   * @param {JwtSignOptions} [options]
    * @returns {Promise<string>}
-   * @memberof TokenService
    */
   async refreshToken(
     payload: RefreshTokenPayload,
@@ -83,8 +83,8 @@ export class TokenService {
   /**
    * @description Verify refresh token
    * @param {string} refreshToken
+   * @param {JwtVerifyOptions} [options]
    * @returns {Promise<RefreshTokenPayload>}
-   * @memberof TokenService
    */
   async verifyRefreshToken(
     refreshToken: string,
@@ -106,8 +106,8 @@ export class TokenService {
   /**
    * @description Generate email verification token
    * @param {EmailConfrimationTokenPayload} payload
+   * @param {JwtSignOptions} [options]
    * @returns {Promise<string>}
-   * @memberof TokenService
    */
   async emailVerificationToken(
     payload: EmailConfrimationTokenPayload,
@@ -124,6 +124,7 @@ export class TokenService {
   /**
    * @description Verify email verification token
    * @param {string} verifyEmailToken
+   * @param {JwtVerifyOptions} [options]
    * @returns {Promise<EmailConfrimationTokenPayload>}
    */
   async verifyEmailVerificationToken(

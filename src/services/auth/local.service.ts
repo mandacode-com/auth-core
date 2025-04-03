@@ -35,7 +35,7 @@ export class AuthLocalService {
    *    password: string;
    *    nickname?: string;
    *    }} data Email, login ID, password, nickname
-   * @returns {Promise<string>} Token
+   * @returns {Promise<string>} Email verification token
    */
   async createTempUser(data: {
     email: string;
@@ -104,7 +104,7 @@ export class AuthLocalService {
   /**
    * @description Resend the email verification code
    * @param {{ email: string }} data Email
-   * @returns {Promise<string>} Token
+   * @returns {Promise<string>} Regenerated email verification token
    */
   async resend(data: { email: string }): Promise<string> {
     const tempUser = await this.prisma.tempUser.findUnique({
@@ -151,7 +151,7 @@ export class AuthLocalService {
   /**
    * @description Verify the email
    * @param {{ token: string }} data Token
-   * @returns {Promise<{ uuid: string }>}
+   * @returns {Promise<{ uuid: string }>} User UUID
    */
   async verifyEmail(data: { token: string }): Promise<{
     uuid: string;
