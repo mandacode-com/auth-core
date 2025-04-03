@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Config } from 'src/schemas/config.schema';
-import { OauthService } from './oauth.service';
+import { OauthAccountService } from './oauth_account.service';
 import { Provider } from '@prisma/client';
 import { TokenService } from '../token.service';
 import {
@@ -13,25 +13,20 @@ import {
   KakaoProfile,
   kakaoProfileSchema,
 } from 'src/schemas/oauth.schema';
-import { OauthImpl } from './oauth_impl';
+import { OauthService } from './oauth.service';
 
 @Injectable()
-export class KakaoOauthService implements OauthImpl {
+export class KakaoOauthService implements OauthService {
   private readonly kakaoConfig: Config['oauth']['kakao'];
 
   constructor(
     private readonly config: ConfigService<Config, true>,
-    private readonly oauthService: OauthService,
+    private readonly oauthAccountService: OauthAccountService,
     private readonly tokenService: TokenService,
   ) {
     this.kakaoConfig = this.config.get<Config['oauth']>('oauth').kakao;
   }
 
-  /**
-   * @description Get an access token
-   * @param {string} code
-   * @returns {Promise<{ accessToken: string }>}
-   */
   async getAccessToken(code: string): Promise<{ accessToken: string }> {
     const clientId = this.kakaoConfig.clientId;
     const clientSecret = this.kakaoConfig.clientSecret;
@@ -55,15 +50,6 @@ export class KakaoOauthService implements OauthImpl {
     };
   }
 
-  /**
-   * @description Get a profile
-   * @param {string} accessToken
-   * @returns {Promise<{
-   *  id: string;
-   *  email: string;
-   *  nickname: string;
-   * }>}
-   */
   async getProfile(accessToken: string): Promise<{
     id: string;
     email: string;
@@ -94,14 +80,6 @@ export class KakaoOauthService implements OauthImpl {
     };
   }
 
-  /**
-   * @description Login with Google
-   * @param {string} code
-   * @returns {Promise<{
-   *   accessToken: string;
-   *   refreshToken: string;
-   * }>}
-   */
   async login(code: string): Promise<{
     accessToken: string;
     refreshToken: string;
@@ -109,14 +87,14 @@ export class KakaoOauthService implements OauthImpl {
     const { accessToken: OauthAccessToken } = await this.getAccessToken(code);
     const profile = await this.getProfile(OauthAccessToken);
 
-    const existingUser = await this.oauthService
+    const existingUser = await this.oauthAccountService
       .getUser({
         provider: Provider.KAKAO,
         providerId: profile.id,
       })
       .catch(async (error) => {
         if (error instanceof NotFoundException) {
-          return await this.oauthService.createUser({
+          return await this.oauthAccountService.createUser({
             provider: Provider.KAKAO,
             providerId: profile.id,
             email: profile.email,
@@ -144,10 +122,6 @@ export class KakaoOauthService implements OauthImpl {
     };
   }
 
-  /**
-   * @description Get the login URL
-   * @returns {string}
-   */
   getLoginUrl(): string {
     const clientId = this.kakaoConfig.clientId;
     const redirectUri = this.kakaoConfig.redirectUri;

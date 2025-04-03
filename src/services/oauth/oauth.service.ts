@@ -1,76 +1,37 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma.service';
-import { Provider, User } from '@prisma/client';
-
-@Injectable()
-export class OauthService {
-  constructor(private readonly prisma: PrismaService) {}
+export interface OauthService {
+  /**
+   * @description Get the login URL
+   * @returns {string}
+   */
+  getLoginUrl(): string;
 
   /**
-   * @description Get a user
-   * @param {{
-   *   provider: Provider;
-   *   providerId: string;
-   *   }} data Provider and provider ID
-   *   @returns {Promise<User>} User
+   * @description Get an access token
+   * @param {string} code
+   * @returns {Promise<{ accessToken: string }>}
    */
-  async getUser(data: {
-    provider: Provider;
-    providerId: string;
-  }): Promise<User> {
-    const user = await this.prisma.user.findFirst({
-      where: {
-        oauthAccounts: {
-          some: {
-            provider: data.provider,
-            providerId: data.providerId,
-          },
-        },
-      },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    return user;
-  }
+  getAccessToken(code: string): Promise<{
+    accessToken: string;
+  }>;
 
   /**
-   * @description Create a user
-   * @param {{
-   *   provider: Provider;
-   *   providerId: string;
-   *   email: string;
-   *   nickname?: string;
-   *   }} data Provider, provider ID, email, and nickname
-   *   @returns {Promise<User>} User
+   * @description Get a user profile
+   * @param {string} accessToken
+   * @returns {Promise<{ id: string; nickname: string | undefined; email: string | undefined }>}
    */
-  async createUser(data: {
-    provider: Provider;
-    providerId: string;
-    email: string;
-    nickname: string;
-  }): Promise<User> {
-    const randomUuid = crypto.randomUUID();
-    const user = await this.prisma.user.create({
-      data: {
-        oauthAccounts: {
-          create: {
-            email: data.email,
-            provider: data.provider,
-            providerId: data.providerId,
-          },
-        },
-        profile: {
-          create: {
-            nickname: data.nickname,
-          },
-        },
-        uuid: randomUuid,
-      },
-    });
+  getProfile(accessToken: string): Promise<{
+    id: string;
+    nickname: string | undefined;
+    email: string | undefined;
+  }>;
 
-    return user;
-  }
+  /**
+   * @description Login
+   * @param {string} code
+   * @returns {Promise<{ accessToken: string; refreshToken: string }>}
+   */
+  login(code: string): Promise<{
+    accessToken: string;
+    refreshToken: string;
+  }>;
 }
