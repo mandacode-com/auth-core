@@ -7,7 +7,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["auth", "user", "public", "temp_user"]
+  schemas  = ["auth", "users", "public", "temp_users"]
 }
 
 model AuthAccount {
@@ -19,7 +19,7 @@ model AuthAccount {
   email     String   @unique @db.VarChar(256)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  @@map("auth_account")
+  @@map("auth_accounts")
   @@schema("auth")
 }
 
@@ -27,13 +27,13 @@ model OAuthAccount {
   id         Int      @id @default(autoincrement())
   userId     Int      @map("user_id")
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  email      String?  @unique @db.VarChar(256)
+  email      String   @db.VarChar(256)
   provider   Provider
   providerId String   @map("provider_id") @db.VarChar(256)
 
   @@unique([provider, providerId])
   @@unique([provider, email])
-  @@map("oauth_account")
+  @@map("oauth_accounts")
   @@schema("auth")
 }
 
@@ -45,8 +45,8 @@ model User {
   oauthAccounts OAuthAccount[]
   profile       Profile?
 
-  @@map("user")
-  @@schema("user")
+  @@map("users")
+  @@schema("users")
 }
 
 model Profile {
@@ -59,7 +59,7 @@ model Profile {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("profile")
-  @@schema("user")
+  @@schema("users")
 }
 
 model TempUser {
@@ -74,8 +74,8 @@ model TempUser {
   emailVerificationCode String   @map("email_verification_code") @db.Char(16)
   resendCount           Int      @default(0) @map("resend_count")
 
-  @@map("temp_user")
-  @@schema("temp_user")
+  @@map("temp_users")
+  @@schema("temp_users")
 }
 
 enum Provider {
