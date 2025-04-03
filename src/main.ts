@@ -46,10 +46,7 @@ async function bootstrap() {
 
   // Create a session store
   let sessionStore: session.Store | undefined;
-  if (
-    config.get<Config['server']>('server').nodeEnv === 'development' ||
-    config.get<Config['server']>('server').nodeEnv === 'test'
-  ) {
+  if (config.get<Config['server']>('server').nodeEnv === 'production') {
     // Redis session store
     const redisClient = await createClient({
       socket: {
@@ -68,6 +65,8 @@ async function bootstrap() {
     sessionStore = new RedisStore({
       client: redisClient,
     });
+  } else {
+    sessionStore = new session.MemoryStore();
   }
 
   // enable cors
