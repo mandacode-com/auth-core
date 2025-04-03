@@ -8,7 +8,11 @@ import { Config } from 'src/schemas/config.schema';
 import { OauthService } from './oauth.service';
 import { Provider } from '@prisma/client';
 import { TokenService } from '../token.service';
-import { GoogleAccessToken, GoogleProfile } from 'src/schemas/oauth.schema';
+import {
+  GoogleAccessToken,
+  GoogleProfile,
+  googleProfileSchema,
+} from 'src/schemas/oauth.schema';
 import { OauthImpl } from './oauth_impl';
 
 @Injectable()
@@ -74,8 +78,13 @@ export class GoogleOauthService implements OauthImpl {
 
     const data = (await response.json()) as GoogleProfile;
 
+    const parsedData = await googleProfileSchema.parseAsync(data);
+    if (!parsedData.email_verified) {
+      throw new UnauthorizedException('Invalid email');
+    }
+
     return {
-      id: data.id,
+      id: data.sub,
       email: data.email,
       nickname: data.name,
     };

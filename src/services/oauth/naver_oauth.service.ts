@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -8,7 +9,7 @@ import { Config } from 'src/schemas/config.schema';
 import { OauthService } from './oauth.service';
 import { TokenService } from '../token.service';
 import { Provider } from '@prisma/client';
-import { NaverProfile } from 'src/schemas/oauth.schema';
+import { NaverProfile, naverProfileSchema } from 'src/schemas/oauth.schema';
 import { OauthImpl } from './oauth_impl';
 
 @Injectable()
@@ -77,14 +78,16 @@ export class NaverOauthService implements OauthImpl {
 
     const data = (await response.json()) as NaverProfile;
 
-    if (data.resultcode !== '00') {
+    const parsedData = await naverProfileSchema.parseAsync(data);
+
+    if (parsedData.resultcode !== '00') {
       throw new UnauthorizedException('Invalid access token');
     }
 
     return {
-      id: data.response.id,
-      email: data.response.email,
-      nickname: data.response.nickname,
+      id: parsedData.response.id.toString(),
+      email: parsedData.response.email,
+      nickname: parsedData.response.nickname,
     };
   }
 

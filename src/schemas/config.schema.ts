@@ -96,7 +96,7 @@ export const configSchema = z.object({
         profile: z
           .string()
           .url()
-          .default('https://www.googleapis.com/oauth2/v1/userinfo'),
+          .default('https://www.googleapis.com/oauth2/v3/userinfo'),
       }),
       clientId: z.string(),
       clientSecret: z.string(),

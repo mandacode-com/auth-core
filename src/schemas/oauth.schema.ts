@@ -7,9 +7,9 @@ export const googleAccessTokenSchema = z.object({
 export type GoogleAccessToken = z.infer<typeof googleAccessTokenSchema>;
 
 export const googleProfileSchema = z.object({
-  id: z.string(),
+  sub: z.string(),
   email: z.string(),
-  verified_email: z.boolean(),
+  email_verified: z.boolean(),
   name: z.string(),
   given_name: z.string(),
   picture: z.string(),
@@ -64,7 +64,7 @@ export const naverProfileSchema = z.object({
     id: z.string(),
     nickname: z.string(),
     email: z.string(),
-    profile_image: z.string(),
+    profile_image: z.string().optional(),
   }),
 });
 
