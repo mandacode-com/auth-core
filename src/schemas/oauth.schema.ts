@@ -29,9 +29,19 @@ export const kakaoAccessTokenSchema = z.object({
 export type KakaoAccessToken = z.infer<typeof kakaoAccessTokenSchema>;
 
 export const kakaoProfileSchema = z.object({
-  sub: z.string(),
-  nickname: z.string(),
-  picture: z.string(),
+  id: z.number(),
+  properties: z.object({
+    nickname: z.string(),
+  }),
+  kakao_account: z.object({
+    email: z.string(),
+    has_email: z.boolean(),
+    is_email_valid: z.boolean(),
+    is_email_verified: z.boolean(),
+    profile: z.object({
+      nickname: z.string(),
+    }),
+  }),
 });
 
 export type KakaoProfile = z.infer<typeof kakaoProfileSchema>;

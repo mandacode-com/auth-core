@@ -41,7 +41,7 @@ export class OauthService {
    * @param {{
    *   provider: Provider;
    *   providerId: string;
-   *   email?: string;
+   *   email: string;
    *   nickname?: string;
    *   }} data Provider, provider ID, email, and nickname
    *   @returns {Promise<User>} User
@@ -49,8 +49,8 @@ export class OauthService {
   async createUser(data: {
     provider: Provider;
     providerId: string;
-    email?: string;
-    nickname?: string;
+    email: string;
+    nickname: string;
   }): Promise<User> {
     const randomUuid = crypto.randomUUID();
     const user = await this.prisma.user.create({
@@ -60,6 +60,11 @@ export class OauthService {
             email: data.email,
             provider: data.provider,
             providerId: data.providerId,
+          },
+        },
+        profile: {
+          create: {
+            nickname: data.nickname,
           },
         },
         uuid: randomUuid,

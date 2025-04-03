@@ -8,7 +8,11 @@ import { Config } from 'src/schemas/config.schema';
 import { OauthService } from './oauth.service';
 import { Provider } from '@prisma/client';
 import { TokenService } from '../token.service';
-import { KakaoAccessToken, KakaoProfile } from 'src/schemas/oauth.schema';
+import {
+  KakaoAccessToken,
+  KakaoProfile,
+  kakaoProfileSchema,
+} from 'src/schemas/oauth.schema';
 import { OauthImpl } from './oauth_impl';
 
 @Injectable()
@@ -65,10 +69,18 @@ export class KakaoOauthService implements OauthImpl {
     }
 
     const data = (await response.json()) as KakaoProfile;
+    const parsedData = await kakaoProfileSchema.parseAsync(data);
+    if (
+      !parsedData.kakao_account.has_email ||
+      !parsedData.kakao_account.is_email_valid ||
+      !parsedData.kakao_account.is_email_verified
+    ) {
+      throw new UnauthorizedException('Invalid email');
+    }
     return {
-      id: data.sub,
-      email: undefined,
-      nickname: data.nickname,
+      id: parsedData.id.toString(),
+      email: parsedData.kakao_account.email,
+      nickname: parsedData.properties.nickname,
     };
   }
 
@@ -95,7 +107,7 @@ export class KakaoOauthService implements OauthImpl {
       .catch(async (error) => {
         if (error instanceof NotFoundException) {
           return await this.oauthService.createUser({
-            provider: Provider.GOOGLE,
+            provider: Provider.KAKAO,
             providerId: profile.id,
             email: profile.email,
             nickname: profile.nickname,
@@ -126,7 +138,7 @@ export class KakaoOauthService implements OauthImpl {
     const clientId = this.kakaoConfig.clientId;
     const redirectUri = this.kakaoConfig.redirectUri;
     const endpoint = this.kakaoConfig.endpoints.auth;
-    const url = `${endpoint}?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=email%20profile`;
+    const url = `${endpoint}?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=account_email%20profile_nickname`;
 
     return url;
   }
