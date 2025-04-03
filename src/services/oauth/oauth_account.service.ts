@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Provider, User } from '@prisma/client';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class OauthAccountService {
@@ -52,7 +53,7 @@ export class OauthAccountService {
     email: string;
     nickname: string;
   }): Promise<User> {
-    const randomUuid = crypto.randomUUID();
+    const randomUuid = randomUUID();
     const user = await this.prisma.user.create({
       data: {
         oauthAccounts: {
