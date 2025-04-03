@@ -10,6 +10,7 @@ import { HttpExceptionFilter } from './filters/httpException.filter';
 import helmet from 'helmet';
 import { Config } from './schemas/config.schema';
 import { RedisStore } from 'connect-redis';
+import { ZodExceptionFilter } from './filters/zodException.filter';
 
 async function bootstrap() {
   // Create App instance
@@ -45,13 +46,14 @@ async function bootstrap() {
 
   // Create a session store
   let sessionStore: session.Store | undefined;
-  if (
-    config.get<Config['server']>('server').nodeEnv === 'development' ||
-    config.get<Config['server']>('server').nodeEnv === 'test'
-  ) {
+  if (config.get<Config['server']>('server').nodeEnv === 'production') {
     // Redis session store
     const redisClient = await createClient({
-      url: config.get<Config['session']>('session').storageUrl,
+      socket: {
+        host: config.get<Config['session']>('session').storage.host,
+        port: config.get<Config['session']>('session').storage.port,
+      },
+      password: config.get<Config['session']>('session').storage.password,
     })
       .connect()
       .catch((error) => {
@@ -63,6 +65,8 @@ async function bootstrap() {
     sessionStore = new RedisStore({
       client: redisClient,
     });
+  } else {
+    sessionStore = new session.MemoryStore();
   }
 
   // enable cors
@@ -92,9 +96,15 @@ async function bootstrap() {
   app.use(cookieParser(config.get<Config['cookie']>('cookie').secret));
 
   // Implement global exception filter
-  app.useGlobalFilters(new HttpExceptionFilter(), new PrismaExceptionFilter());
+  app.useGlobalFilters(
+    new HttpExceptionFilter(),
+    new PrismaExceptionFilter(),
+    new ZodExceptionFilter(),
+  );
 
   await app.listen(config.get<Config['server']>('server').port);
   logger.log(`Server is running on: ${await app.getUrl()}`);
 }
-bootstrap();
+bootstrap().catch((error) => {
+  Logger.error(error);
+});

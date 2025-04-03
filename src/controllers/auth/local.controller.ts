@@ -3,46 +3,34 @@ import {
   Controller,
   Get,
   HttpCode,
-  HttpException,
   InternalServerErrorException,
   Post,
   Query,
   Req,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
-import { PinoLogger } from 'nestjs-pino';
 import { ResponseData } from 'src/interfaces/response.interface';
 import { ZodValidationPipe } from 'src/pipes/validation.pipe';
 import {
-  SigninBody,
-  signinBodySchema,
+  LoginBody,
+  loginBodySchema,
   SignupBody,
   signupBodySchema,
 } from 'src/schemas/auth.schema';
-import { Config } from 'src/schemas/config.schema';
 import { AuthLocalService } from 'src/services/auth/local.service';
 import { MailerService } from 'src/services/mailer.service';
-import { TokenService } from 'src/services/token.service';
 
-@Controller('local')
+@Controller('auth/local')
 export class LocalController {
-  private readonly serviceStatus: Config['status'];
-
   constructor(
     private readonly authLocalService: AuthLocalService,
-    private readonly configService: ConfigService<Config, true>,
-    private readonly tokenService: TokenService,
-    private readonly logger: PinoLogger,
     private readonly mailerService: MailerService,
-  ) {
-    this.serviceStatus = this.configService.get<Config['status']>('status');
-  }
+  ) {}
 
-  @Get('confirm')
+  @Get('verify-email')
   @HttpCode(200)
-  async confirm(@Query('token') token: string): Promise<ResponseData> {
-    await this.authLocalService.confirm(token);
+  async verify(@Query('token') token: string): Promise<ResponseData> {
+    await this.authLocalService.verifyEmail({ token });
     return {
       message: 'success',
     };
@@ -51,19 +39,15 @@ export class LocalController {
   @Get('resend')
   @HttpCode(200)
   async resend(@Query('email') email: string): Promise<ResponseData> {
-    const token = await this.authLocalService.resend(email);
+    const token = await this.authLocalService.resend({ email });
     return new Promise<ResponseData>((resolve, reject) => {
       this.mailerService.sendEmailVerificationToken(email, token).subscribe({
         next: () => {
-          this.logger.info(`Email sent to ${email}`);
           resolve({
             message: 'email sent',
           });
         },
-        error: (error) => {
-          this.logger.error(
-            `Failed to send email to ${email} with error: ${error}`,
-          );
+        error: (_error) => {
           reject(new InternalServerErrorException('Failed to send email'));
         },
       });
@@ -75,64 +59,57 @@ export class LocalController {
   async signup(
     @Body(new ZodValidationPipe(signupBodySchema)) body: SignupBody,
   ): Promise<ResponseData> {
-    if (this.serviceStatus.localSignup === false) {
-      throw new HttpException('Local signup is disabled', 423);
-    }
-    const token = await this.authLocalService.createTempMember(
-      body.email,
-      body.password,
-      body.nickname,
-    );
+    const token = await this.authLocalService.createTempUser({
+      email: body.email,
+      loginId: body.loginId,
+      password: body.password,
+      nickname: body.nickname,
+    });
 
     return new Promise<ResponseData>((resolve, reject) => {
       this.mailerService
         .sendEmailVerificationToken(body.email, token)
         .subscribe({
           next: () => {
-            this.logger.info(`Email sent to ${body.email}`);
             resolve({
               message: 'success',
             });
           },
-          error: async (error) => {
-            await this.authLocalService.deleteTempMember(body.email);
-            reject(new InternalServerErrorException('Failed to send email'));
-            this.logger.error(
-              `Failed to send email to ${body.email} with error: ${error}`,
-            );
+          error: (_error) => {
+            this.authLocalService
+              .deleteTempUser({ email: body.email })
+              .then(() => {
+                reject(
+                  new InternalServerErrorException('Failed to send email'),
+                );
+              })
+              .catch((_err) => {
+                reject(
+                  new InternalServerErrorException(
+                    'Failed to send email and delete temporary user',
+                  ),
+                );
+              });
           },
         });
     });
   }
 
-  @Post('signin')
+  @Post('login')
   @HttpCode(200)
   async signin(
-    @Body(new ZodValidationPipe(signinBodySchema))
-    body: SigninBody,
+    @Body(new ZodValidationPipe(loginBodySchema))
+    body: LoginBody,
     @Req() req: Request,
   ): Promise<
     ResponseData<{
       accessToken: string;
     }>
   > {
-    if (this.serviceStatus.localSignin === false) {
-      throw new HttpException('Local signin is disabled', 423);
-    }
-    const member = await this.authLocalService.signin(
-      body.email,
-      body.password,
-    );
-
-    // Issue access token and refresh token
-    const [accessToken, refreshToken] = await Promise.all([
-      this.tokenService.accessToken({
-        uuid: member.uuid,
-      }),
-      this.tokenService.refreshToken({
-        uuid: member.uuid,
-      }),
-    ]);
+    const { accessToken, refreshToken } = await this.authLocalService.login({
+      loginId: body.loginId,
+      password: body.password,
+    });
 
     // Set refresh token in session
     req.session.refresh = refreshToken;

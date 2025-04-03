@@ -1,29 +1,75 @@
-FROM node:22-alpine AS base
+# =============================
+# 1. Build Stage
+# =============================
+FROM node:23-alpine AS builder
 
-FROM base AS deps
+# Set working directory
 WORKDIR /app
-COPY package.json package-lock.json ./
-COPY prisma ./prisma
-RUN \
-  if [ -f package-lock.json ]; then \
-  npm ci; \
-  npx prisma generate; \
-  npm prune --production; \
-  else \
-  echo "no package-lock.json found" && exit 1; \
-  fi
 
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# Copy package.json and package-lock.json first for caching
+COPY package*.json ./
+
+# Install dependencies (including devDependencies for build process)
+RUN npm ci
+
+# Copy source files
 COPY . .
+
+# Copy Prisma migrations
+COPY prisma ./prisma
+
+# Generate Prisma Client
+RUN npx prisma generate
+
+# Build NestJS application
 RUN npm run build
 
-FROM base AS release
-WORKDIR /app
-COPY --from=builder /app/dist ./dist
-COPY --from=deps /app/node_modules ./node_modules
+# =============================
+# 2. Prune Stage (Remove Dev Dependencies)
+# =============================
+FROM node:23-alpine AS pruner
 
+WORKDIR /app
+
+# Copy node_modules and package.json from builder
+COPY --from=builder /app/node_modules ./node_modules
+COPY package*.json ./
+
+# Remove devDependencies to reduce final image size
+RUN npm prune --production
+
+# Copy Prisma Client
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+
+# Copy Prisma migrations
+COPY --from=builder /app/prisma ./prisma
+
+# =============================
+# 3. Final Runtime Stage
+# =============================
+FROM node:23-alpine AS runtime
+
+WORKDIR /app
+
+# Set non-root user for security
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+# Copy built app and production dependencies
+COPY --from=pruner /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY package.json ./
+
+# Copy Prisma Client
+COPY --from=pruner /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=pruner /app/node_modules/@prisma ./node_modules/@prisma
+
+# Copy Prisma migrations
+COPY --from=pruner /app/prisma ./prisma
+
+# Expose application port
 EXPOSE 3000
 
-CMD node dist/main.js
+# Set default command
+CMD ["node", "dist/main.js"]

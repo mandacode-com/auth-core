@@ -1,22 +1,27 @@
-import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpStatus,
+} from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ResponseError } from 'src/interfaces/response.interface';
+import { ZodError } from 'zod';
 
-@Catch(PrismaClientKnownRequestError)
-export class PrismaExceptionFilter implements ExceptionFilter {
-  catch(exception: PrismaClientKnownRequestError, host: ArgumentsHost) {
+@Catch(ZodError)
+export class ZodExceptionFilter implements ExceptionFilter {
+  catch(exception: ZodError, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    const status = 500;
-    const message = exception.message;
-    const name = 'Database Error';
+    const status = HttpStatus.BAD_REQUEST;
+    const message = exception.errors.map((error) => error.message).join(', ');
+    const errors = 'Validation Error';
 
     const errorResponse: ResponseError = {
       message: message,
       data: {
-        error: name,
+        error: errors,
         path: request.url,
         timestamp: new Date().toISOString(),
       },

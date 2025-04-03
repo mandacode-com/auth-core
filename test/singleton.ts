@@ -1,18 +1,15 @@
 import {
-  EmailVerification,
-  GradeType,
-  Member,
-  MemberGrade,
-  Password,
+  AuthAccount,
   PrismaClient,
   Profile,
-  Provider,
-  ProviderType,
-  TempMember,
+  TempUser,
+  User,
+  UserRole,
 } from '@prisma/client';
 import { DeepMockProxy, mockDeep, mockReset } from 'jest-mock-extended';
 import prisma from './client';
-import { randomBytes, randomUUID } from 'crypto';
+import { randomBytes } from 'crypto';
+import bcrypt from 'bcrypt';
 
 jest.mock('./client', () => ({
   __esModule: true,
@@ -25,57 +22,44 @@ beforeEach(() => {
 
 export const prismaMock = prisma as unknown as DeepMockProxy<PrismaClient>;
 
-const mockEmailVerification: EmailVerification = {
-  id: BigInt(1),
-  code: randomBytes(8).toString('hex'),
-};
-const mockTempMember: TempMember = {
-  id: BigInt(1),
-  email: 'test@test.com',
-  nickname: 'test',
-  password: 'password',
-  createDate: new Date(),
-  expiryDate: new Date(),
-  emailVerificationId: mockEmailVerification.id,
-};
-const mockMemberGrade: MemberGrade = {
+const mockPassword = 'password';
+const hashedPassword = bcrypt.hashSync(mockPassword, 10);
+
+const mockUser: User = {
   id: 1,
-  grade: GradeType.NORMAL,
-  updateDate: new Date(),
+  uuid: crypto.randomUUID(),
+  role: UserRole.USER,
 };
+
+const mockAuthAccount: AuthAccount = {
+  id: 1,
+  userId: mockUser.id,
+  loginId: 'test',
+  email: 'test@test.com',
+  password: hashedPassword,
+  createdAt: new Date(),
+};
+
 const mockProfile: Profile = {
   id: 1,
-  nickname: mockTempMember.nickname,
-  imageUrl: '',
+  userId: mockUser.id,
+  nickname: 'test',
+  profileImage: null,
   joinDate: new Date(),
   updateDate: new Date(),
 };
-const mockPassword: Password = {
-  id: 1,
-  password: mockTempMember.password,
+
+const mockTempUser: TempUser = {
+  id: BigInt(1),
+  email: mockAuthAccount.email || 'test@test.com',
+  nickname: mockProfile.nickname,
+  loginId: mockAuthAccount.loginId,
+  password: mockAuthAccount.password,
+  createDate: new Date(),
   updateDate: new Date(),
-};
-const mockProvider: Provider = {
-  id: 1,
-  provider: ProviderType.LOCAL,
-  socialInfoId: null,
-};
-const mockMember: Member = {
-  id: 1,
-  email: mockTempMember.email,
-  uuidKey: randomUUID(),
-  memberGradeId: mockMemberGrade.id,
-  profileId: mockProfile.id,
-  passwordId: mockPassword.id,
-  providerId: mockProvider.id,
+  expiryDate: new Date(),
+  emailVerificationCode: randomBytes(8).toString('hex'),
+  resendCount: 0,
 };
 
-export {
-  mockEmailVerification,
-  mockTempMember,
-  mockMemberGrade,
-  mockProfile,
-  mockPassword,
-  mockProvider,
-  mockMember,
-};
+export { mockPassword, mockUser, mockAuthAccount, mockProfile, mockTempUser };

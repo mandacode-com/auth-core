@@ -26,29 +26,33 @@ export const configSchema = z.object({
   session: z.object({
     name: z.string().default('sid'),
     timeout: z.number().int().positive().default(3600),
-    storageUrl: z.string().default('redis://localhost:6379'),
-  }),
-  status: z.object({
-    localSignup: z.boolean().default(true),
-    localSignin: z.boolean().default(true),
+    storage: z.object({
+      host: z.string().default('localhost'),
+      port: z.number().int().positive().default(6379),
+      password: z.string().default(''),
+    }),
   }),
   jwt: z.object({
-    secret: z.object({
-      access: z.string().min(8),
-      refresh: z.string().min(8),
-      emailConfirmation: z.string().min(8),
-    }),
-    // Token expiration in seconds
-    expiresIn: z.object({
-      access: z
+    access: z.object({
+      public: z.string(),
+      private: z.string(),
+      expiresIn: z
         .string()
         .regex(/^\d+[smhdy]$/)
         .default('15m'),
-      refresh: z
+    }),
+    refresh: z.object({
+      public: z.string(),
+      private: z.string(),
+      expiresIn: z
         .string()
         .regex(/^\d+[smhdy]$/)
         .default('30d'),
-      emailConfirmation: z
+    }),
+    emailVerification: z.object({
+      public: z.string(),
+      private: z.string(),
+      expiresIn: z
         .string()
         .regex(/^\d+[smhdy]$/)
         .default('30d'),
@@ -56,9 +60,80 @@ export const configSchema = z.object({
   }),
   mailer: z.object({
     url: z.string(),
+    minDelay: z
+      .string()
+      .regex(/^\d+[smhdy]$/)
+      .default('1m'),
   }),
   urls: z.object({
-    confirmEmail: z.string().url(),
+    verifyEmail: z.string().url(),
+  }),
+  servicesStatus: z.object({
+    auth: z.object({
+      local: z.object({
+        signup: z.boolean().default(true),
+        login: z.boolean().default(true),
+        verifyEmail: z.boolean().default(true),
+        resend: z.boolean().default(true),
+      }),
+    }),
+    session: z.object({
+      check: z.boolean().default(true),
+      destroy: z.boolean().default(true),
+    }),
+    token: z.object({
+      refresh: z.boolean().default(true),
+    }),
+  }),
+  oauth: z.object({
+    google: z.object({
+      endpoints: z.object({
+        auth: z
+          .string()
+          .url()
+          .default('https://accounts.google.com/o/oauth2/v2/auth'),
+        token: z.string().url().default('https://oauth2.googleapis.com/token'),
+        profile: z
+          .string()
+          .url()
+          .default('https://www.googleapis.com/oauth2/v3/userinfo'),
+      }),
+      clientId: z.string(),
+      clientSecret: z.string(),
+      redirectUri: z.string(),
+      grantType: z.string().default('authorization_code'),
+    }),
+    kakao: z.object({
+      endpoints: z.object({
+        auth: z
+          .string()
+          .url()
+          .default('https://kauth.kakao.com/oauth/authorize'),
+        token: z.string().url().default('https://kauth.kakao.com/oauth/token'),
+        profile: z.string().url().default('https://kapi.kakao.com/v2/user/me'),
+      }),
+      clientId: z.string(),
+      clientSecret: z.string(),
+      redirectUri: z.string(),
+      grantType: z.string().default('authorization_code'),
+    }),
+    naver: z.object({
+      endpoints: z.object({
+        auth: z
+          .string()
+          .url()
+          .default('https://nid.naver.com/oauth2.0/authorize'),
+        token: z.string().url().default('https://nid.naver.com/oauth2.0/token'),
+        profile: z
+          .string()
+          .url()
+          .default('https://openapi.naver.com/v1/nid/me'),
+      }),
+      clientId: z.string(),
+      clientSecret: z.string(),
+      redirectUri: z.string(),
+      grantType: z.string().default('authorization_code'),
+    }),
   }),
 });
 
