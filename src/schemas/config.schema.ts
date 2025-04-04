@@ -100,7 +100,10 @@ export const configSchema = z.object({
       }),
       clientId: z.string(),
       clientSecret: z.string(),
-      redirectUri: z.string(),
+      redirectUris: z.object({
+        web: z.string(),
+        mobile: z.string(),
+      }),
       grantType: z.string().default('authorization_code'),
     }),
     kakao: z.object({
@@ -114,7 +117,10 @@ export const configSchema = z.object({
       }),
       clientId: z.string(),
       clientSecret: z.string(),
-      redirectUri: z.string(),
+      redirectUris: z.object({
+        web: z.string(),
+        mobile: z.string(),
+      }),
       grantType: z.string().default('authorization_code'),
     }),
     naver: z.object({
@@ -131,7 +137,10 @@ export const configSchema = z.object({
       }),
       clientId: z.string(),
       clientSecret: z.string(),
-      redirectUri: z.string(),
+      redirectUris: z.object({
+        web: z.string(),
+        mobile: z.string(),
+      }),
       grantType: z.string().default('authorization_code'),
     }),
   }),

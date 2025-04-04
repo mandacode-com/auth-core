@@ -92,7 +92,10 @@ export function validate(raw: Record<string, unknown>) {
         },
         clientId: raw.OAUTH_GOOGLE_CLIENT_ID as string,
         clientSecret: raw.OAUTH_GOOGLE_CLIENT_SECRET as string,
-        redirectUri: raw.OAUTH_GOOGLE_REDIRECT_URI as string,
+        redirectUris: {
+          web: raw.OAUTH_GOOGLE_REDIRECT_URI_WEB as string,
+          mobile: raw.OAUTH_GOOGLE_REDIRECT_URI_MOBILE as string,
+        },
         grantType: raw.OAUTH_GOOGLE_GRANT_TYPE as string,
       },
       naver: {
@@ -103,7 +106,10 @@ export function validate(raw: Record<string, unknown>) {
         },
         clientId: raw.OAUTH_NAVER_CLIENT_ID as string,
         clientSecret: raw.OAUTH_NAVER_CLIENT_SECRET as string,
-        redirectUri: raw.OAUTH_NAVER_REDIRECT_URI as string,
+        redirectUris: {
+          web: raw.OAUTH_NAVER_REDIRECT_URI_WEB as string,
+          mobile: raw.OAUTH_NAVER_REDIRECT_URI_MOBILE as string,
+        },
         grantType: raw.OAUTH_NAVER_GRANT_TYPE as string,
       },
       kakao: {
@@ -114,7 +120,10 @@ export function validate(raw: Record<string, unknown>) {
         },
         clientId: raw.OAUTH_KAKAO_CLIENT_ID as string,
         clientSecret: raw.OAUTH_KAKAO_CLIENT_SECRET as string,
-        redirectUri: raw.OAUTH_KAKAO_REDIRECT_URI as string,
+        redirectUris: {
+          web: raw.OAUTH_KAKAO_REDIRECT_URI_WEB as string,
+          mobile: raw.OAUTH_KAKAO_REDIRECT_URI_MOBILE as string,
+        },
         grantType: raw.OAUTH_KAKAO_GRANT_TYPE as string,
       },
     },
