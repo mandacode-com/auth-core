@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   HttpCode,
@@ -10,8 +11,8 @@ import { ResponseData } from 'src/interfaces/response.interface';
 import { AccessTokenPayload } from 'src/schemas/token.schema';
 import { TokenService } from 'src/services/token.service';
 
-@Controller('token')
-export class TokenController {
+@Controller('m/token')
+export class MobileTokenController {
   constructor(private readonly tokenService: TokenService) {}
 
   @Get('verify')
@@ -33,12 +34,13 @@ export class TokenController {
 
   @Get('refresh')
   @HttpCode(200)
-  async refresh(@Req() req: Request): Promise<
+  async refresh(@Body() body: { refreshToken: string }): Promise<
     ResponseData<{
       accessToken: string;
+      refreshToken: string;
     }>
   > {
-    const refreshToken = req.session.refresh;
+    const refreshToken = body.refreshToken;
 
     if (!refreshToken) {
       throw new NotFoundException('refresh token not found');
@@ -57,12 +59,11 @@ export class TokenController {
       }),
     ]);
 
-    req.session.refresh = newRefreshToken;
-
     return {
       message: 'success',
       data: {
         accessToken,
+        refreshToken: newRefreshToken,
       },
     };
   }
