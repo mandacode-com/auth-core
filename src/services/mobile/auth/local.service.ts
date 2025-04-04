@@ -23,7 +23,8 @@ export class MobileAuthLocalService {
     private readonly tokenService: TokenService,
     private readonly configService: ConfigService<Config, true>,
   ) {
-    const config: Config['mailer'] = this.configService.get('mailer');
+    const config: Config['mailerService'] =
+      this.configService.get('mailerService');
     this.minDelay = ms(config.minDelay as ms.StringValue);
   }
 

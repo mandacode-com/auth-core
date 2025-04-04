@@ -12,7 +12,7 @@ export class MailerService implements OnModuleInit {
   private emailVerificationServiceClient: EmailVerificationServiceClient;
   private readonly urls: Config['urls'];
   constructor(
-    @Inject('AUTO_MAILER') private client: ClientGrpc,
+    @Inject(EMAIL_VERIFICATION_SERVICE_NAME) private client: ClientGrpc,
     private readonly configService: ConfigService<Config, true>,
   ) {
     this.urls = this.configService.get('urls');

@@ -32,33 +32,10 @@ export const configSchema = z.object({
       password: z.string().default(''),
     }),
   }),
-  jwt: z.object({
-    access: z.object({
-      public: z.string(),
-      private: z.string(),
-      expiresIn: z
-        .string()
-        .regex(/^\d+[smhdy]$/)
-        .default('15m'),
-    }),
-    refresh: z.object({
-      public: z.string(),
-      private: z.string(),
-      expiresIn: z
-        .string()
-        .regex(/^\d+[smhdy]$/)
-        .default('30d'),
-    }),
-    emailVerification: z.object({
-      public: z.string(),
-      private: z.string(),
-      expiresIn: z
-        .string()
-        .regex(/^\d+[smhdy]$/)
-        .default('30d'),
-    }),
+  tokenService: z.object({
+    url: z.string(),
   }),
-  mailer: z.object({
+  mailerService: z.object({
     url: z.string(),
     minDelay: z
       .string()

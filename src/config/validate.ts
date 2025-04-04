@@ -34,25 +34,11 @@ export function validate(raw: Record<string, unknown>) {
         password: raw.SESSION_STORAGE_PASSWORD as string,
       },
     },
-    jwt: {
-      access: {
-        public: raw.JWT_PUBLIC_ACCESS as string,
-        private: raw.JWT_PRIVATE_ACCESS as string,
-        expiresIn: raw.JWT_EXPIRES_IN_ACCESS as string,
-      },
-      refresh: {
-        public: raw.JWT_PUBLIC_REFRESH as string,
-        private: raw.JWT_PRIVATE_REFRESH as string,
-        expiresIn: raw.JWT_EXPIRES_IN_REFRESH as string,
-      },
-      emailVerification: {
-        public: raw.JWT_PUBLIC_EMAIL_VERIFICATION as string,
-        private: raw.JWT_PRIVATE_EMAIL_VERIFICATION as string,
-        expiresIn: raw.JWT_EXPIRES_IN_EMAIL_VERIFICATION as string,
-      },
+    tokenService: {
+      url: raw.TOKEN_SERVICE_URL as string,
     },
-    mailer: {
-      url: raw.AUTO_MAILER_URL as string,
+    mailerService: {
+      url: raw.MAILER_SERVICE_URL as string,
       minDelay: raw.AUTO_MAILER_MIN_DELAY as string,
     },
     urls: {
