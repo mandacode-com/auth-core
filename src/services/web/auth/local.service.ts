@@ -5,9 +5,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { PrismaService } from '../prisma.service';
+import { PrismaService } from '../../prisma.service';
 import { randomBytes, randomUUID } from 'crypto';
-import { TokenService } from '../token.service';
+import { TokenService } from '../../token.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { TempUser } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';

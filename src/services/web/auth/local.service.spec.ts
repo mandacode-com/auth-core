@@ -2,7 +2,7 @@ import { AuthAccount } from '@prisma/client';
 import { AuthLocalService } from './local.service';
 import { mock, MockProxy } from 'jest-mock-extended';
 import { Test, TestingModule } from '@nestjs/testing';
-import { TokenService } from '../token.service';
+import { TokenService } from '../../token.service';
 import {
   mockAuthAccount,
   mockPassword,
@@ -11,7 +11,7 @@ import {
   mockUser,
   prismaMock,
 } from 'test/singleton';
-import { PrismaService } from '../prisma.service';
+import { PrismaService } from '../../prisma.service';
 import { randomBytes } from 'crypto';
 import { ConfigModule } from '@nestjs/config';
 import ms from 'ms';

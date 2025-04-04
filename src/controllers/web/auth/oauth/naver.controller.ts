@@ -1,6 +1,6 @@
 import { Controller, Get, Query, Req } from '@nestjs/common';
 import { Request } from 'express';
-import { NaverOauthService } from 'src/services/oauth/naver_oauth.service';
+import { NaverOauthService } from 'src/services/web/auth/oauth/naver_oauth.service';
 
 @Controller('auth/oauth/naver')
 export class NaverOauthController {

@@ -5,11 +5,11 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Config } from 'src/schemas/config.schema';
-import { OauthAccountService } from './oauth_account.service';
-import { TokenService } from '../token.service';
+import { OauthAccountService } from '../../../oauth_account.service';
+import { TokenService } from '../../../token.service';
 import { Provider } from '@prisma/client';
 import { NaverProfile, naverProfileSchema } from 'src/schemas/oauth.schema';
-import { OauthService } from './oauth.service';
+import { OauthService } from '../../../oauth.service';
 
 @Injectable()
 export class NaverOauthService implements OauthService {
@@ -28,7 +28,7 @@ export class NaverOauthService implements OauthService {
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const clientId = this.naverConfig.clientId;
     const clientSecret = this.naverConfig.clientSecret;
-    const redirectUri = this.naverConfig.redirectUri;
+    const redirectUri = this.naverConfig.redirectUris.web;
     const grantType = this.naverConfig.grantType;
     const endpoint = this.naverConfig.endpoints.token;
     const url = `${endpoint}?client_id=${clientId}&client_secret=${clientSecret}&redirect_uri=${redirectUri}&code=${code}&grant_type=${grantType}`;
@@ -128,7 +128,7 @@ export class NaverOauthService implements OauthService {
 
   getLoginUrl(): string {
     const clientId = this.naverConfig.clientId;
-    const redirectUri = this.naverConfig.redirectUri;
+    const redirectUri = this.naverConfig.redirectUris.web;
     const endpoint = this.naverConfig.endpoints.auth;
     const url = `${endpoint}?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}`;
 

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { TokenController } from 'src/controllers/token.controller';
-import { TokenServiceModule } from './token_service.module';
+import { TokenController } from 'src/controllers/web/token.controller';
+import { TokenServiceModule } from '../token_service.module';
 
 @Module({
   imports: [TokenServiceModule],

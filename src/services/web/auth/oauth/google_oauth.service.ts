@@ -5,34 +5,36 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Config } from 'src/schemas/config.schema';
-import { OauthAccountService } from './oauth_account.service';
+import { OauthAccountService } from '../../../oauth_account.service';
 import { Provider } from '@prisma/client';
-import { TokenService } from '../token.service';
+import { TokenService } from '../../../token.service';
 import {
-  KakaoAccessToken,
-  KakaoProfile,
-  kakaoProfileSchema,
+  GoogleAccessToken,
+  GoogleProfile,
+  googleProfileSchema,
 } from 'src/schemas/oauth.schema';
-import { OauthService } from './oauth.service';
+import { OauthService } from '../../../oauth.service';
 
 @Injectable()
-export class KakaoOauthService implements OauthService {
-  private readonly kakaoConfig: Config['oauth']['kakao'];
+export class GoogleOauthService implements OauthService {
+  private readonly googleConfig: Config['oauth']['google'];
 
   constructor(
     private readonly config: ConfigService<Config, true>,
     private readonly oauthAccountService: OauthAccountService,
     private readonly tokenService: TokenService,
   ) {
-    this.kakaoConfig = this.config.get<Config['oauth']>('oauth').kakao;
+    this.googleConfig = this.config.get<Config['oauth']>('oauth').google;
   }
 
-  async getAccessToken(code: string): Promise<{ accessToken: string }> {
-    const clientId = this.kakaoConfig.clientId;
-    const clientSecret = this.kakaoConfig.clientSecret;
-    const redirectUri = this.kakaoConfig.redirectUri;
-    const grantType = this.kakaoConfig.grantType;
-    const endpoint = this.kakaoConfig.endpoints.token;
+  async getAccessToken(code: string): Promise<{
+    accessToken: string;
+  }> {
+    const clientId = this.googleConfig.clientId;
+    const clientSecret = this.googleConfig.clientSecret;
+    const redirectUri = this.googleConfig.redirectUris.web;
+    const grantType = this.googleConfig.grantType;
+    const endpoint = this.googleConfig.endpoints.token;
     const url = `${endpoint}?client_id=${clientId}&client_secret=${clientSecret}&redirect_uri=${redirectUri}&code=${code}&grant_type=${grantType}`;
 
     // Make a request to the Google API
@@ -43,8 +45,7 @@ export class KakaoOauthService implements OauthService {
       throw new UnauthorizedException('Invalid code');
     }
 
-    // return (await response.json()) as KakaoAccessToken;
-    const data = (await response.json()) as KakaoAccessToken;
+    const data = (await response.json()) as GoogleAccessToken;
     return {
       accessToken: data.access_token,
     };
@@ -55,7 +56,7 @@ export class KakaoOauthService implements OauthService {
     email: string;
     nickname: string;
   }> {
-    const endpoint = this.kakaoConfig.endpoints.profile;
+    const endpoint = this.googleConfig.endpoints.profile;
     const url = `${endpoint}?access_token=${accessToken}`;
 
     // Make a request to the Google API
@@ -64,19 +65,17 @@ export class KakaoOauthService implements OauthService {
       throw new UnauthorizedException('Invalid access token');
     }
 
-    const data = (await response.json()) as KakaoProfile;
-    const parsedData = await kakaoProfileSchema.parseAsync(data);
-    if (
-      !parsedData.kakao_account.has_email ||
-      !parsedData.kakao_account.is_email_valid ||
-      !parsedData.kakao_account.is_email_verified
-    ) {
+    const data = (await response.json()) as GoogleProfile;
+
+    const parsedData = await googleProfileSchema.parseAsync(data);
+    if (!parsedData.email_verified) {
       throw new UnauthorizedException('Invalid email');
     }
+
     return {
-      id: parsedData.id.toString(),
-      email: parsedData.kakao_account.email,
-      nickname: parsedData.properties.nickname,
+      id: data.sub,
+      email: data.email,
+      nickname: data.name,
     };
   }
 
@@ -89,13 +88,13 @@ export class KakaoOauthService implements OauthService {
 
     const existingUser = await this.oauthAccountService
       .getUser({
-        provider: Provider.KAKAO,
+        provider: Provider.GOOGLE,
         providerId: profile.id,
       })
       .catch(async (error) => {
         if (error instanceof NotFoundException) {
           return await this.oauthAccountService.createUser({
-            provider: Provider.KAKAO,
+            provider: Provider.GOOGLE,
             providerId: profile.id,
             email: profile.email,
             nickname: profile.nickname,
@@ -123,10 +122,10 @@ export class KakaoOauthService implements OauthService {
   }
 
   getLoginUrl(): string {
-    const clientId = this.kakaoConfig.clientId;
-    const redirectUri = this.kakaoConfig.redirectUri;
-    const endpoint = this.kakaoConfig.endpoints.auth;
-    const url = `${endpoint}?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=account_email%20profile_nickname`;
+    const clientId = this.googleConfig.clientId;
+    const redirectUri = this.googleConfig.redirectUris.web;
+    const endpoint = this.googleConfig.endpoints.auth;
+    const url = `${endpoint}?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=email%20profile`;
 
     return url;
   }

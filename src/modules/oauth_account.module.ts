@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from 'src/modules/prisma.module';
-import { OauthAccountService } from 'src/services/oauth/oauth_account.service';
+import { OauthAccountService } from 'src/services/oauth_account.service';
 
 @Module({
   imports: [PrismaModule],

@@ -1,15 +1,15 @@
 import { Controller, Get, Query, Req } from '@nestjs/common';
 import { Request } from 'express';
-import { GoogleOauthService } from 'src/services/oauth/google_oauth.service';
+import { KakaoOauthService } from 'src/services/web/auth/oauth/kakao_oauth.service';
 
-@Controller('auth/oauth/google')
-export class GoogleOauthController {
-  constructor(private readonly googleOauth: GoogleOauthService) {}
+@Controller('auth/oauth/kakao')
+export class KakaoOauthController {
+  constructor(private readonly kakaoOauth: KakaoOauthService) {}
 
   @Get('login')
   login(): { url: string } {
     return {
-      url: this.googleOauth.getLoginUrl(),
+      url: this.kakaoOauth.getLoginUrl(),
     };
   }
 
@@ -23,7 +23,7 @@ export class GoogleOauthController {
       accessToken: string;
     };
   }> {
-    const { accessToken, refreshToken } = await this.googleOauth.login(code);
+    const { accessToken, refreshToken } = await this.kakaoOauth.login(code);
 
     // Set refesh token in session
     req.session.refresh = refreshToken;

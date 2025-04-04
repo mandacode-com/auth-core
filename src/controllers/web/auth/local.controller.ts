@@ -17,11 +17,11 @@ import {
   SignupBody,
   signupBodySchema,
 } from 'src/schemas/auth.schema';
-import { AuthLocalService } from 'src/services/auth/local.service';
+import { AuthLocalService } from 'src/services/web/auth/local.service';
 import { MailerService } from 'src/services/mailer.service';
 
 @Controller('auth/local')
-export class LocalController {
+export class AuthLocalController {
   constructor(
     private readonly authLocalService: AuthLocalService,
     private readonly mailerService: MailerService,
