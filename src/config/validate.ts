@@ -39,78 +39,55 @@ export function validate(raw: Record<string, unknown>) {
     },
     mailerService: {
       url: raw.MAILER_SERVICE_URL as string,
-      minDelay: raw.AUTO_MAILER_MIN_DELAY as string,
+      minDelay: raw.MAILER_MIN_DELAY as string,
     },
-    urls: {
-      verifyEmail: raw.VERIFY_EMAIL_URL as string,
-    },
-    servicesStatus: {
-      auth: {
-        local: {
-          signup: parseBoolean(
-            raw.SERVICE_AUTH_LOCAL_SIGNUP as string,
-          ) as boolean,
-          login: parseBoolean(
-            raw.SERVICE_AUTH_LOCAL_LOGIN as string,
-          ) as boolean,
-          verifyEmail: parseBoolean(
-            raw.SERVICE_AUTH_LOCAL_VERIFY_EMAIL as string,
-          ) as boolean,
-          resend: parseBoolean(
-            raw.SERVICE_AUTH_LOCAL_RESEND as string,
-          ) as boolean,
-        },
+    auth: {
+      local: {
+        verifyEmailUrl: raw.VERIFY_EMAIL_URL as string,
       },
-      session: {
-        check: parseBoolean(raw.SERVICE_SESSION_CHECK as string) as boolean,
-        destroy: parseBoolean(raw.SERVICE_SESSION_DESTROY as string) as boolean,
-      },
-      token: {
-        refresh: parseBoolean(raw.SERVICE_TOKEN_REFRESH as string) as boolean,
-      },
-    },
-    oauth: {
-      google: {
-        endpoints: {
-          token: raw.OAUTH_GOOGLE_ENDPOINT_TOKEN as string,
-          profile: raw.OAUTH_GOOGLE_ENDPOINT_PROFILE as string,
-          auth: raw.OAUTH_GOOGLE_ENDPOINT_AUTH as string,
+      oauth: {
+        google: {
+          endpoints: {
+            token: raw.OAUTH_GOOGLE_ENDPOINT_TOKEN as string,
+            profile: raw.OAUTH_GOOGLE_ENDPOINT_PROFILE as string,
+            auth: raw.OAUTH_GOOGLE_ENDPOINT_AUTH as string,
+          },
+          clientId: raw.OAUTH_GOOGLE_CLIENT_ID as string,
+          clientSecret: raw.OAUTH_GOOGLE_CLIENT_SECRET as string,
+          redirectUris: {
+            web: raw.OAUTH_GOOGLE_REDIRECT_URI_WEB as string,
+            mobile: raw.OAUTH_GOOGLE_REDIRECT_URI_MOBILE as string,
+          },
+          grantType: raw.OAUTH_GOOGLE_GRANT_TYPE as string,
         },
-        clientId: raw.OAUTH_GOOGLE_CLIENT_ID as string,
-        clientSecret: raw.OAUTH_GOOGLE_CLIENT_SECRET as string,
-        redirectUris: {
-          web: raw.OAUTH_GOOGLE_REDIRECT_URI_WEB as string,
-          mobile: raw.OAUTH_GOOGLE_REDIRECT_URI_MOBILE as string,
+        naver: {
+          endpoints: {
+            token: raw.OAUTH_NAVER_ENDPOINT_TOKEN as string,
+            profile: raw.OAUTH_NAVER_ENDPOINT_PROFILE as string,
+            auth: raw.OAUTH_NAVER_ENDPOINT_AUTH as string,
+          },
+          clientId: raw.OAUTH_NAVER_CLIENT_ID as string,
+          clientSecret: raw.OAUTH_NAVER_CLIENT_SECRET as string,
+          redirectUris: {
+            web: raw.OAUTH_NAVER_REDIRECT_URI_WEB as string,
+            mobile: raw.OAUTH_NAVER_REDIRECT_URI_MOBILE as string,
+          },
+          grantType: raw.OAUTH_NAVER_GRANT_TYPE as string,
         },
-        grantType: raw.OAUTH_GOOGLE_GRANT_TYPE as string,
-      },
-      naver: {
-        endpoints: {
-          token: raw.OAUTH_NAVER_ENDPOINT_TOKEN as string,
-          profile: raw.OAUTH_NAVER_ENDPOINT_PROFILE as string,
-          auth: raw.OAUTH_NAVER_ENDPOINT_AUTH as string,
+        kakao: {
+          endpoints: {
+            token: raw.OAUTH_KAKAO_ENDPOINT_TOKEN as string,
+            profile: raw.OAUTH_KAKAO_ENDPOINT_PROFILE as string,
+            auth: raw.OAUTH_KAKAO_ENDPOINT_AUTH as string,
+          },
+          clientId: raw.OAUTH_KAKAO_CLIENT_ID as string,
+          clientSecret: raw.OAUTH_KAKAO_CLIENT_SECRET as string,
+          redirectUris: {
+            web: raw.OAUTH_KAKAO_REDIRECT_URI_WEB as string,
+            mobile: raw.OAUTH_KAKAO_REDIRECT_URI_MOBILE as string,
+          },
+          grantType: raw.OAUTH_KAKAO_GRANT_TYPE as string,
         },
-        clientId: raw.OAUTH_NAVER_CLIENT_ID as string,
-        clientSecret: raw.OAUTH_NAVER_CLIENT_SECRET as string,
-        redirectUris: {
-          web: raw.OAUTH_NAVER_REDIRECT_URI_WEB as string,
-          mobile: raw.OAUTH_NAVER_REDIRECT_URI_MOBILE as string,
-        },
-        grantType: raw.OAUTH_NAVER_GRANT_TYPE as string,
-      },
-      kakao: {
-        endpoints: {
-          token: raw.OAUTH_KAKAO_ENDPOINT_TOKEN as string,
-          profile: raw.OAUTH_KAKAO_ENDPOINT_PROFILE as string,
-          auth: raw.OAUTH_KAKAO_ENDPOINT_AUTH as string,
-        },
-        clientId: raw.OAUTH_KAKAO_CLIENT_ID as string,
-        clientSecret: raw.OAUTH_KAKAO_CLIENT_SECRET as string,
-        redirectUris: {
-          web: raw.OAUTH_KAKAO_REDIRECT_URI_WEB as string,
-          mobile: raw.OAUTH_KAKAO_REDIRECT_URI_MOBILE as string,
-        },
-        grantType: raw.OAUTH_KAKAO_GRANT_TYPE as string,
       },
     },
   };
