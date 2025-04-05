@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   InternalServerErrorException,
+  Logger,
   Post,
   Query,
   Req,
@@ -47,7 +48,8 @@ export class AuthLocalController {
             message: 'email sent',
           });
         },
-        error: (_error) => {
+        error: (error) => {
+          Logger.error('Failed to send email', error);
           reject(new InternalServerErrorException('Failed to send email'));
         },
       });

@@ -2,34 +2,39 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientGrpc } from '@nestjs/microservices';
 import {
-  EMAIL_VERIFICATION_SERVICE_NAME,
-  EmailVerificationServiceClient,
-} from 'src/protos/email_verification';
+  MAILER_SERVICE_NAME,
+  MailerServiceClient,
+  MailType,
+} from 'src/protos/mailer';
 import { Config } from 'src/schemas/config.schema';
 
 @Injectable()
 export class MailerService implements OnModuleInit {
-  private emailVerificationServiceClient: EmailVerificationServiceClient;
-  private readonly urls: Config['urls'];
+  private emailVerificationServiceClient: MailerServiceClient;
+  private readonly localAuthConfig: Config['auth']['local'];
   constructor(
-    @Inject('AUTO_MAILER') private client: ClientGrpc,
+    @Inject(MAILER_SERVICE_NAME) private client: ClientGrpc,
     private readonly configService: ConfigService<Config, true>,
   ) {
-    this.urls = this.configService.get('urls');
+    this.localAuthConfig = this.configService.get('auth', {
+      infer: true,
+    }).local;
   }
 
   onModuleInit() {
     this.emailVerificationServiceClient =
-      this.client.getService<EmailVerificationServiceClient>(
-        EMAIL_VERIFICATION_SERVICE_NAME,
-      );
+      this.client.getService<MailerServiceClient>(MAILER_SERVICE_NAME);
   }
 
   sendEmailVerificationToken(email: string, token: string) {
-    const link = `${this.urls.verifyEmail}?token=${token}`;
-    return this.emailVerificationServiceClient.sendEmailVerificationLink({
-      email,
-      link,
+    const link = `${this.localAuthConfig.verifyEmailUrl}?token=${token}`;
+    return this.emailVerificationServiceClient.sendEmail({
+      type: MailType.VERIFY_EMAIL,
+      to: email,
+      subject: 'Verify your email address',
+      verification: {
+        link,
+      },
     });
   }
 }

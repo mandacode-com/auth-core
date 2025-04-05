@@ -1,6 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtService, JwtSignOptions, JwtVerifyOptions } from '@nestjs/jwt';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import {
   AccessTokenPayload,
   accessTokenPayloadSchema,
@@ -9,140 +7,207 @@ import {
   RefreshTokenPayload,
   refreshTokenPayloadSchema,
 } from 'src/schemas/token.schema';
-import { Config } from 'src/schemas/config.schema';
+import {
+  TOKEN_SERVICE_NAME,
+  TokenServiceClient,
+  TokenType,
+} from 'src/protos/token';
+import { ClientGrpc } from '@nestjs/microservices';
 
 @Injectable()
 export class TokenService {
-  private readonly jwtConfig: Config['jwt'];
-  constructor(
-    private readonly jwtService: JwtService,
-    private readonly configService: ConfigService<Config, true>,
-  ) {
-    this.jwtConfig = this.configService.get<Config['jwt']>('jwt');
+  private tokenClient: TokenServiceClient;
+  constructor(@Inject(TOKEN_SERVICE_NAME) private client: ClientGrpc) {}
+
+  onModuleInit() {
+    this.tokenClient =
+      this.client.getService<TokenServiceClient>(TOKEN_SERVICE_NAME);
   }
 
   /**
    * @description Generate access token
    * @param {AccessTokenPayload} payload
-   * @param {JwtSignOptions} [options]
    * @returns {Promise<string>}
    */
-  async accessToken(
-    payload: AccessTokenPayload,
-    options?: JwtSignOptions,
-  ): Promise<string> {
-    return this.jwtService.signAsync(payload, {
-      privateKey: this.jwtConfig.access.private,
-      expiresIn: this.jwtConfig.access.expiresIn,
-      algorithm: 'RS256',
-      ...options,
+  async accessToken(payload: AccessTokenPayload): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      this.tokenClient
+        .issueToken({
+          type: TokenType.ACCESS,
+          accessTokenPayload: {
+            uuid: payload.uuid,
+            role: payload.role,
+          },
+        })
+        .subscribe({
+          next: (response) => {
+            resolve(response.token);
+          },
+          error: () => {
+            reject(new BadRequestException('Failed to generate access token'));
+          },
+        });
     });
   }
 
   /**
    * @description Verify access token
    * @param {string} accessToken
-   * @param {JwtVerifyOptions} [options]
    * @returns {Promise<AccessTokenPayload>}
    */
-  async verifyAccessToken(
-    accessToken: string,
-    options?: JwtVerifyOptions,
-  ): Promise<AccessTokenPayload> {
-    return this.jwtService
-      .verifyAsync<AccessTokenPayload>(accessToken, {
-        publicKey: this.jwtConfig.access.public,
-        algorithms: ['RS256'],
-        ...options,
-      })
-      .then(async (payload) => {
-        return accessTokenPayloadSchema.parseAsync(payload).catch(() => {
-          throw new BadRequestException('Invalid access token');
+  async verifyAccessToken(accessToken: string): Promise<AccessTokenPayload> {
+    return new Promise<AccessTokenPayload>((resolve, reject) => {
+      this.tokenClient
+        .verifyToken({
+          type: TokenType.ACCESS,
+          token: accessToken,
+        })
+        .subscribe({
+          next: (response) => {
+            accessTokenPayloadSchema
+              .parseAsync({
+                uuid: response.accessTokenPayload?.uuid,
+                role: response.accessTokenPayload?.role,
+              })
+              .then((payload) => {
+                resolve(payload);
+              })
+              .catch(() => {
+                reject(new BadRequestException('Invalid access token'));
+              });
+          },
+          error: () => {
+            reject(new BadRequestException('Invalid access token'));
+          },
         });
-      });
+    });
   }
 
   /**
    * @description Generate refresh token
    * @param {RefreshTokenPayload} payload
-   * @param {JwtSignOptions} [options]
    * @returns {Promise<string>}
    */
-  async refreshToken(
-    payload: RefreshTokenPayload,
-    options?: JwtSignOptions,
-  ): Promise<string> {
-    return this.jwtService.signAsync(payload, {
-      privateKey: this.jwtConfig.refresh.private,
-      expiresIn: this.jwtConfig.refresh.expiresIn,
-      algorithm: 'RS256',
-      ...options,
+  async refreshToken(payload: RefreshTokenPayload): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      this.tokenClient
+        .issueToken({
+          type: TokenType.REFRESH,
+          refreshTokenPayload: {
+            uuid: payload.uuid,
+            role: payload.role,
+          },
+        })
+        .subscribe({
+          next: (response) => {
+            resolve(response.token);
+          },
+          error: () => {
+            reject(new BadRequestException('Failed to generate refresh token'));
+          },
+        });
     });
   }
 
   /**
    * @description Verify refresh token
    * @param {string} refreshToken
-   * @param {JwtVerifyOptions} [options]
    * @returns {Promise<RefreshTokenPayload>}
    */
-  async verifyRefreshToken(
-    refreshToken: string,
-    options?: JwtVerifyOptions,
-  ): Promise<RefreshTokenPayload> {
-    return this.jwtService
-      .verifyAsync<RefreshTokenPayload>(refreshToken, {
-        publicKey: this.jwtConfig.refresh.public,
-        algorithms: ['RS256'],
-        ...options,
-      })
-      .then(async (payload) => {
-        return refreshTokenPayloadSchema.parseAsync(payload).catch(() => {
-          throw new BadRequestException('Invalid refresh token');
+  async verifyRefreshToken(refreshToken: string): Promise<RefreshTokenPayload> {
+    return new Promise<RefreshTokenPayload>((resolve, reject) => {
+      this.tokenClient
+        .verifyToken({
+          type: TokenType.REFRESH,
+          token: refreshToken,
+        })
+        .subscribe({
+          next: (response) => {
+            refreshTokenPayloadSchema
+              .parseAsync({
+                uuid: response.refreshTokenPayload?.uuid,
+                role: response.refreshTokenPayload?.role,
+              })
+              .then((payload) => {
+                resolve(payload);
+              })
+              .catch(() => {
+                reject(new BadRequestException('Invalid refresh token'));
+              });
+          },
+          error: () => {
+            reject(new BadRequestException('Invalid refresh token'));
+          },
         });
-      });
+    });
   }
 
   /**
    * @description Generate email verification token
    * @param {EmailConfrimationTokenPayload} payload
-   * @param {JwtSignOptions} [options]
    * @returns {Promise<string>}
    */
   async emailVerificationToken(
     payload: EmailConfrimationTokenPayload,
-    options?: JwtSignOptions,
   ): Promise<string> {
-    return this.jwtService.signAsync(payload, {
-      privateKey: this.jwtConfig.emailVerification.private,
-      expiresIn: this.jwtConfig.emailVerification.expiresIn,
-      algorithm: 'RS256',
-      ...options,
+    return new Promise<string>((resolve, reject) => {
+      this.tokenClient
+        .issueToken({
+          type: TokenType.EMAIL_VERIFICATION,
+          emailVerificationTokenPayload: {
+            email: payload.email,
+            code: payload.code,
+          },
+        })
+        .subscribe({
+          next: (response) => {
+            resolve(response.token);
+          },
+          error: () => {
+            reject(
+              new BadRequestException(
+                'Failed to generate email verification token',
+              ),
+            );
+          },
+        });
     });
   }
 
   /**
    * @description Verify email verification token
    * @param {string} verifyEmailToken
-   * @param {JwtVerifyOptions} [options]
    * @returns {Promise<EmailConfrimationTokenPayload>}
    */
   async verifyEmailVerificationToken(
     verifyEmailToken: string,
-    options?: JwtVerifyOptions,
   ): Promise<EmailConfrimationTokenPayload> {
-    return this.jwtService
-      .verifyAsync<EmailConfrimationTokenPayload>(verifyEmailToken, {
-        publicKey: this.jwtConfig.emailVerification.public,
-        algorithms: ['RS256'],
-        ...options,
-      })
-      .then(async (payload) => {
-        return emailConfrimationTokenPayloadSchema
-          .parseAsync(payload)
-          .catch(() => {
-            throw new BadRequestException('Invalid email verification token');
-          });
-      });
+    return new Promise<EmailConfrimationTokenPayload>((resolve, reject) => {
+      this.tokenClient
+        .verifyToken({
+          type: TokenType.EMAIL_VERIFICATION,
+          token: verifyEmailToken,
+        })
+        .subscribe({
+          next: (response) => {
+            emailConfrimationTokenPayloadSchema
+              .parseAsync({
+                email: response.emailVerificationTokenPayload?.email,
+                code: response.emailVerificationTokenPayload?.code,
+              })
+              .then((payload) => {
+                resolve(payload);
+              })
+              .catch(() => {
+                reject(
+                  new BadRequestException('Invalid email verification token'),
+                );
+              });
+          },
+          error: () => {
+            reject(new BadRequestException('Invalid email verification token'));
+          },
+        });
+    });
   }
 }

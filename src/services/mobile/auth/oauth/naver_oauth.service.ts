@@ -13,14 +13,14 @@ import { TokenService } from 'src/services/token.service';
 
 @Injectable()
 export class MobileNaverOauthService implements OauthService {
-  private readonly naverConfig: Config['oauth']['naver'];
+  private readonly naverConfig: Config['auth']['oauth']['naver'];
 
   constructor(
     private readonly config: ConfigService<Config, true>,
     private readonly oauthAccountService: OauthAccountService,
     private readonly tokenService: TokenService,
   ) {
-    this.naverConfig = this.config.get<Config['oauth']>('oauth').naver;
+    this.naverConfig = this.config.get('auth', { infer: true }).oauth.naver;
   }
 
   async getAccessToken(

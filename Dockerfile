@@ -68,6 +68,9 @@ COPY --from=pruner /app/node_modules/@prisma ./node_modules/@prisma
 # Copy Prisma migrations
 COPY --from=pruner /app/prisma ./prisma
 
+# Set environment variables
+ENV PORT=3000
+
 # Expose application port
 EXPOSE 3000
 

@@ -1,7 +1,7 @@
 {
   "name": "mandacode-auth-core",
-  "version": "0.1.3",
-  "description": "mandacode auth service core module",
+  "version": "0.1.5",
+  "description": "Core module for Mandacode authentication service",
   "author": "sauce",
   "private": true,
   "license": "UNLICENSED",
@@ -27,7 +27,6 @@
     "@nestjs/common": "^11.0.7",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.7",
-    "@nestjs/jwt": "^11.0.0",
     "@nestjs/microservices": "^11.0.7",
     "@nestjs/platform-express": "^11.0.7",
     "@prisma/client": "^6.4.1",

@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package token;
+
+service TokenService {
+  rpc IssueToken(IssueTokenRequest) returns (IssueTokenResponse);
+  rpc VerifyToken(VerifyTokenRequest) returns (VerifyTokenResponse);
+}
+
+enum TokenType {
+  ACCESS = 0;
+  REFRESH = 1;
+  EMAIL_VERIFICATION = 2;
+}
+
+message IssueTokenRequest {
+  TokenType type = 1;
+
+  oneof payload {
+    AccessTokenPayload access_token_payload = 2;   
+    RefreshTokenPayload refresh_token_payload = 3;
+    EmailVerificationTokenPayload email_verification_token_payload = 4;
+  }
+}
+
+message IssueTokenResponse {
+  string token = 1;
+}
+
+message VerifyTokenRequest {
+  string token = 1;
+  TokenType type = 2;
+}
+
+message VerifyTokenResponse {
+  oneof payload {
+    AccessTokenPayload access_token_payload = 2;
+    RefreshTokenPayload refresh_token_payload = 3;
+    EmailVerificationTokenPayload email_verification_token_payload = 4;
+  }
+}
+
+message AccessTokenPayload {
+  string uuid = 1;
+  string role = 2;
+}
+
+message RefreshTokenPayload {
+  string uuid = 1;
+  string role = 2;
+}
+
+message EmailVerificationTokenPayload {
+  string email = 1;
+  string code = 2;
+}
