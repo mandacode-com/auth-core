@@ -17,14 +17,14 @@ import { OauthService } from '../../../oauth.service';
 
 @Injectable()
 export class GoogleOauthService implements OauthService {
-  private readonly googleConfig: Config['oauth']['google'];
+  private readonly googleConfig: Config['auth']['oauth']['google'];
 
   constructor(
     private readonly config: ConfigService<Config, true>,
     private readonly oauthAccountService: OauthAccountService,
     private readonly tokenService: TokenService,
   ) {
-    this.googleConfig = this.config.get<Config['oauth']>('oauth').google;
+    this.googleConfig = this.config.get('auth', { infer: true }).oauth.google;
   }
 
   async getAccessToken(code: string): Promise<{

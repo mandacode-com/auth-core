@@ -17,14 +17,14 @@ import { TokenService } from 'src/services/token.service';
 
 @Injectable()
 export class MobileKakaoOauthService implements OauthService {
-  private readonly kakaoConfig: Config['oauth']['kakao'];
+  private readonly kakaoConfig: Config['auth']['oauth']['kakao'];
 
   constructor(
     private readonly config: ConfigService<Config, true>,
     private readonly oauthAccountService: OauthAccountService,
     private readonly tokenService: TokenService,
   ) {
-    this.kakaoConfig = this.config.get<Config['oauth']>('oauth').kakao;
+    this.kakaoConfig = this.config.get('auth', { infer: true }).oauth.kakao;
   }
 
   async getAccessToken(code: string): Promise<{ accessToken: string }> {
