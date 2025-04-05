@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package mailer;
+
+service MailerService {
+  rpc SendEmail(SendEmailRequest) returns (SendEmailResponse);
+}
+
+enum MailType {
+  VERIFY_EMAIL= 0;
+  PASSWORD_RESET = 1;
+}
+
+message SendEmailRequest {
+  MailType type = 1;
+  string to = 2;
+  string subject = 3;
+  oneof data {
+    EmailVerificationRequest verification = 4;
+    PasswordResetRequest password_reset = 5;
+  }
+}
+
+message EmailVerificationRequest { string link = 1; }
+
+message PasswordResetRequest { string link = 1; }
+
+message SendEmailResponse {}
