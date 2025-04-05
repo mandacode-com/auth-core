@@ -1,14 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { validate } from './config/validate';
-import { SessionModule } from './modules/session.module';
-import { AuthLocalModule } from './modules/auth/local.module';
 import { CacheModule } from '@nestjs/cache-manager';
-import { TokenModule } from './modules/token.module';
 import { AppController } from './app.controller';
-import { GoogleOauthModule } from './modules/oauth/google.module';
-import { KakaoOauthModule } from './modules/oauth/kakao.module';
-import { NaverOauthModule } from './modules/oauth/naver.module';
+import { WebModule } from './modules/web/web.module';
+import { MobileModule } from './modules/mobile/mobile.module';
 
 @Module({
   imports: [
@@ -21,12 +17,8 @@ import { NaverOauthModule } from './modules/oauth/naver.module';
       ttl: 30000,
       max: 1000,
     }),
-    AuthLocalModule,
-    SessionModule,
-    TokenModule,
-    GoogleOauthModule,
-    KakaoOauthModule,
-    NaverOauthModule,
+    WebModule,
+    MobileModule,
   ],
   controllers: [AppController],
 })
