@@ -7,12 +7,12 @@ import { ConfigService } from '@nestjs/config';
 import { Config } from 'src/schemas/config.schema';
 import { Provider } from '@prisma/client';
 import { NaverProfile, naverProfileSchema } from 'src/schemas/oauth.schema';
-import { OauthService } from 'src/services/oauth.service';
 import { OauthAccountService } from 'src/services/oauth_account.service';
 import { TokenService } from 'src/services/token.service';
+import { MobileOauthService } from './mobile_oauth.service';
 
 @Injectable()
-export class MobileNaverOauthService implements OauthService {
+export class MobileNaverOauthService implements MobileOauthService {
   private readonly naverConfig: Config['auth']['oauth']['naver'];
 
   constructor(
@@ -21,6 +21,44 @@ export class MobileNaverOauthService implements OauthService {
     private readonly tokenService: TokenService,
   ) {
     this.naverConfig = this.config.get('auth', { infer: true }).oauth.naver;
+  }
+
+  async loginWithAccess(data: {
+    accessToken: string;
+  }): Promise<{ accessToken: string; refreshToken: string }> {
+    const { accessToken: oauthAccess } = data;
+    const profile = await this.getProfile(oauthAccess);
+    const existingUser = await this.oauthAccountService
+      .getUser({
+        provider: Provider.NAVER,
+        providerId: profile.id,
+      })
+      .catch(async (error) => {
+        if (error instanceof NotFoundException) {
+          return await this.oauthAccountService.createUser({
+            provider: Provider.NAVER,
+            providerId: profile.id,
+            email: profile.email,
+            nickname: profile.nickname,
+          });
+        }
+        throw error;
+      });
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.tokenService.accessToken({
+        uuid: existingUser.uuid,
+        role: existingUser.role,
+      }),
+      this.tokenService.refreshToken({
+        uuid: existingUser.uuid,
+        role: existingUser.role,
+      }),
+    ]);
+    return {
+      accessToken,
+      refreshToken,
+    };
   }
 
   async getAccessToken(
@@ -89,41 +127,9 @@ export class MobileNaverOauthService implements OauthService {
     code: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const { accessToken: oauthAccessToken } = await this.getAccessToken(code);
-    const profile = await this.getProfile(oauthAccessToken);
-
-    const existingUser = await this.oauthAccountService
-      .getUser({
-        provider: Provider.NAVER,
-        providerId: profile.id,
-      })
-      .catch(async (error) => {
-        if (error instanceof NotFoundException) {
-          return await this.oauthAccountService.createUser({
-            provider: Provider.NAVER,
-            providerId: profile.id,
-            email: profile.email,
-            nickname: profile.nickname,
-          });
-        }
-
-        throw error;
-      });
-
-    const [accessToken, refreshToken] = await Promise.all([
-      this.tokenService.accessToken({
-        uuid: existingUser.uuid,
-        role: existingUser.role,
-      }),
-      this.tokenService.refreshToken({
-        uuid: existingUser.uuid,
-        role: existingUser.role,
-      }),
-    ]);
-
-    return {
-      accessToken,
-      refreshToken,
-    };
+    return this.loginWithAccess({
+      accessToken: oauthAccessToken,
+    });
   }
 
   getLoginUrl(): string {

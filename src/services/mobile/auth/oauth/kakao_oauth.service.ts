@@ -11,12 +11,12 @@ import {
   KakaoProfile,
   kakaoProfileSchema,
 } from 'src/schemas/oauth.schema';
-import { OauthService } from 'src/services/oauth.service';
 import { OauthAccountService } from 'src/services/oauth_account.service';
 import { TokenService } from 'src/services/token.service';
+import { MobileOauthService } from './mobile_oauth.service';
 
 @Injectable()
-export class MobileKakaoOauthService implements OauthService {
+export class MobileKakaoOauthService implements MobileOauthService {
   private readonly kakaoConfig: Config['auth']['oauth']['kakao'];
 
   constructor(
@@ -25,6 +25,43 @@ export class MobileKakaoOauthService implements OauthService {
     private readonly tokenService: TokenService,
   ) {
     this.kakaoConfig = this.config.get('auth', { infer: true }).oauth.kakao;
+  }
+
+  async loginWithAccess(data: {
+    accessToken: string;
+  }): Promise<{ accessToken: string; refreshToken: string }> {
+    const { accessToken: oauthAccess } = data;
+    const profile = await this.getProfile(oauthAccess);
+    const existingUser = await this.oauthAccountService
+      .getUser({
+        provider: Provider.KAKAO,
+        providerId: profile.id,
+      })
+      .catch(async (error) => {
+        if (error instanceof NotFoundException) {
+          return await this.oauthAccountService.createUser({
+            provider: Provider.KAKAO,
+            providerId: profile.id,
+            email: profile.email,
+            nickname: profile.nickname,
+          });
+        }
+        throw error;
+      });
+    const [accessToken, refreshToken] = await Promise.all([
+      this.tokenService.accessToken({
+        uuid: existingUser.uuid,
+        role: existingUser.role,
+      }),
+      this.tokenService.refreshToken({
+        uuid: existingUser.uuid,
+        role: existingUser.role,
+      }),
+    ]);
+    return {
+      accessToken,
+      refreshToken,
+    };
   }
 
   async getAccessToken(code: string): Promise<{ accessToken: string }> {
