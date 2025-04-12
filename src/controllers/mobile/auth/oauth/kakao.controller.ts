@@ -1,27 +1,24 @@
-import { Controller, Get, Query, Req } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
+import { ResponseData } from 'src/interfaces/response.interface';
 import { MobileKakaoOauthService } from 'src/services/mobile/auth/oauth/kakao_oauth.service';
 
 @Controller('m/auth/oauth/kakao')
 export class MobileKakaoOauthController {
   constructor(private readonly kakaoOauth: MobileKakaoOauthService) {}
 
-  @Get('login')
-  login(): { url: string } {
-    return {
-      url: this.kakaoOauth.getLoginUrl(),
-    };
-  }
-
-  @Get('callback')
-  async callback(@Query('code') code: string): Promise<{
-    message: string;
-    data: {
+  @Post('login')
+  async login(@Body() data: { accessToken: string }): Promise<
+    ResponseData<{
       accessToken: string;
       refreshToken: string;
-    };
-  }> {
-    const { accessToken, refreshToken } = await this.kakaoOauth.login(code);
-
+    }>
+  > {
+    const { accessToken: oauthAccess } = data;
+    const { accessToken, refreshToken } = await this.kakaoOauth.loginWithAccess(
+      {
+        accessToken: oauthAccess,
+      },
+    );
     return {
       message: 'success',
       data: {

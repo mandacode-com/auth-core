@@ -11,12 +11,12 @@ import {
   GoogleProfile,
   googleProfileSchema,
 } from 'src/schemas/oauth.schema';
-import { OauthService } from 'src/services/oauth.service';
 import { OauthAccountService } from 'src/services/oauth_account.service';
 import { TokenService } from 'src/services/token.service';
+import { MobileOauthService } from './mobile_oauth.service';
 
 @Injectable()
-export class MobileGoogleOauthService implements OauthService {
+export class MobileGoogleOauthService implements MobileOauthService {
   private readonly googleConfig: Config['auth']['oauth']['google'];
 
   constructor(
@@ -83,8 +83,54 @@ export class MobileGoogleOauthService implements OauthService {
     accessToken: string;
     refreshToken: string;
   }> {
-    const { accessToken: OauthAccessToken } = await this.getAccessToken(code);
-    const profile = await this.getProfile(OauthAccessToken);
+    const { accessToken: oauthAccessToken } = await this.getAccessToken(code);
+    const profile = await this.getProfile(oauthAccessToken);
+
+    const existingUser = await this.oauthAccountService
+      .getUser({
+        provider: Provider.GOOGLE,
+        providerId: profile.id,
+      })
+      .catch(async (error) => {
+        if (error instanceof NotFoundException) {
+          return await this.oauthAccountService.createUser({
+            provider: Provider.GOOGLE,
+            providerId: profile.id,
+            email: profile.email,
+            nickname: profile.nickname,
+          });
+        }
+
+        throw error;
+      });
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.tokenService.accessToken({
+        uuid: existingUser.uuid,
+        role: existingUser.role,
+      }),
+      this.tokenService.refreshToken({
+        uuid: existingUser.uuid,
+        role: existingUser.role,
+      }),
+    ]);
+
+    return {
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  async loginWithAccess(data: {
+    accessToken: string;
+    idToken: string;
+  }): Promise<{
+    accessToken: string;
+    refreshToken: string;
+  }> {
+    const { accessToken: oauthAccess, idToken } = data;
+
+    const profile = await this.getProfile(oauthAccess);
 
     const existingUser = await this.oauthAccountService
       .getUser({

@@ -1,27 +1,22 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { ResponseData } from 'src/interfaces/response.interface';
 import { MobileNaverOauthService } from 'src/services/mobile/auth/oauth/naver_oauth.service';
 
 @Controller('m/auth/oauth/naver')
 export class MobileNaverOauthController {
   constructor(private readonly naverOauth: MobileNaverOauthService) {}
 
-  @Get('login')
-  login(): { url: string } {
-    return {
-      url: this.naverOauth.getLoginUrl(),
-    };
-  }
-
-  @Get('callback')
-  async callback(@Query('code') code: string): Promise<{
-    message: string;
-    data: {
-      accessToken: string;
-      refreshToken: string;
-    };
-  }> {
-    const { accessToken, refreshToken } = await this.naverOauth.login(code);
-
+  @Post('login')
+  @HttpCode(200)
+  async login(
+    @Body() data: { accessToken: string },
+  ): Promise<ResponseData<{ accessToken: string; refreshToken: string }>> {
+    const { accessToken: oauthAccess } = data;
+    const { accessToken, refreshToken } = await this.naverOauth.loginWithAccess(
+      {
+        accessToken: oauthAccess,
+      },
+    );
     return {
       message: 'success',
       data: {
