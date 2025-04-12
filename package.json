@@ -1,6 +1,6 @@
 {
   "name": "mandacode-auth-core",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Core module for Mandacode authentication service",
   "author": "sauce",
   "private": true,

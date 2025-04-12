@@ -1,4 +1,5 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { ResponseData } from 'src/interfaces/response.interface';
 import { MobileNaverOauthService } from 'src/services/mobile/auth/oauth/naver_oauth.service';
 
 @Controller('m/auth/oauth/naver')
@@ -9,10 +10,19 @@ export class MobileNaverOauthController {
   @HttpCode(200)
   async login(
     @Body() data: { accessToken: string },
-  ): Promise<{ accessToken: string; refreshToken: string }> {
+  ): Promise<ResponseData<{ accessToken: string; refreshToken: string }>> {
     const { accessToken: oauthAccess } = data;
-    return this.naverOauth.loginWithAccess({
-      accessToken: oauthAccess,
-    });
+    const { accessToken, refreshToken } = await this.naverOauth.loginWithAccess(
+      {
+        accessToken: oauthAccess,
+      },
+    );
+    return {
+      message: 'success',
+      data: {
+        accessToken,
+        refreshToken,
+      },
+    };
   }
 }

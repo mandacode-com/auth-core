@@ -1,5 +1,6 @@
 import { Controller, Get, Query, Req } from '@nestjs/common';
 import { Request } from 'express';
+import { ResponseData } from 'src/interfaces/response.interface';
 import { NaverOauthService } from 'src/services/web/auth/oauth/naver_oauth.service';
 
 @Controller('auth/oauth/naver')
@@ -17,12 +18,7 @@ export class NaverOauthController {
   async callback(
     @Query('code') code: string,
     @Req() req: Request,
-  ): Promise<{
-    message: string;
-    data: {
-      accessToken: string;
-    };
-  }> {
+  ): Promise<ResponseData<{ accessToken: string }>> {
     const { accessToken, refreshToken } = await this.naverOauth.login(code);
 
     // Set refesh token in session
