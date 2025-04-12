@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   NotFoundException,
+  Post,
   Req,
 } from '@nestjs/common';
 import { Request } from 'express';
@@ -32,7 +33,7 @@ export class MobileTokenController {
     };
   }
 
-  @Get('refresh')
+  @Post('refresh')
   @HttpCode(200)
   async refresh(@Body() body: { refreshToken: string }): Promise<
     ResponseData<{

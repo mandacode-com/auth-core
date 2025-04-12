@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, Req } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { MobileKakaoOauthService } from 'src/services/mobile/auth/oauth/kakao_oauth.service';
 
 @Controller('m/auth/oauth/kakao')

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post, Query } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { MobileNaverOauthService } from 'src/services/mobile/auth/oauth/naver_oauth.service';
 
 @Controller('m/auth/oauth/naver')
