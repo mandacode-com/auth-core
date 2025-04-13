@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { ResponseData } from 'src/interfaces/response.interface';
 import { MobileKakaoOauthService } from 'src/services/mobile/auth/oauth/kakao_oauth.service';
 
@@ -7,6 +7,7 @@ export class MobileKakaoOauthController {
   constructor(private readonly kakaoOauth: MobileKakaoOauthService) {}
 
   @Post('login')
+  @HttpCode(200)
   async login(@Body() data: { accessToken: string }): Promise<
     ResponseData<{
       accessToken: string;

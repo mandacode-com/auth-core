@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Req } from '@nestjs/common';
+import { Controller, Get, HttpCode, Query, Req } from '@nestjs/common';
 import { Request } from 'express';
 import { ResponseData } from 'src/interfaces/response.interface';
 import { GoogleOauthService } from 'src/services/web/auth/oauth/google_oauth.service';
@@ -8,6 +8,7 @@ export class GoogleOauthController {
   constructor(private readonly googleOauth: GoogleOauthService) {}
 
   @Get('login')
+  @HttpCode(200)
   login(): { url: string } {
     return {
       url: this.googleOauth.getLoginUrl(),
@@ -15,6 +16,7 @@ export class GoogleOauthController {
   }
 
   @Get('callback')
+  @HttpCode(200)
   async callback(
     @Query('code') code: string,
     @Req() req: Request,
