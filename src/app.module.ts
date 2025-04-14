@@ -5,6 +5,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { AppController } from './app.controller';
 import { WebModule } from './modules/web/web.module';
 import { MobileModule } from './modules/mobile/mobile.module';
+import { UserModule } from './modules/user.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { MobileModule } from './modules/mobile/mobile.module';
     }),
     WebModule,
     MobileModule,
+    UserModule,
   ],
   controllers: [AppController],
 })
