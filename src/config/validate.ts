@@ -1,5 +1,13 @@
 import { Config, configSchema } from 'src/schemas/config.schema';
 
+const parseIntIfExists = (value: string | undefined) => {
+  if (value === undefined) {
+    return undefined;
+  }
+  const parsedValue = parseInt(value);
+  return isNaN(parsedValue) ? undefined : parsedValue;
+};
+
 const parseBoolean = (value: string | null | undefined) => {
   if (!value) {
     return undefined;
@@ -17,6 +25,29 @@ export function validate(raw: Record<string, unknown>) {
     server: {
       nodeEnv: raw.NODE_ENV as string,
       port: parseInt(raw.PORT as string),
+    },
+    eventBus: {
+      client: {
+        clientId: raw.EVENT_BUS_CLIENT_ID as string,
+        brokers: ((raw.EVENT_BUS_BROKERS as string | undefined) ?? '')
+          .split(',')
+          .map((broker) => {
+            return broker.trim();
+          }),
+      },
+      consumer: {
+        groupId: raw.EVENT_BUS_CONSUMER_GROUP_ID as string,
+      },
+      dlt: {
+        retry: {
+          maxAttempts: parseIntIfExists(
+            raw.EVENT_BUS_DLT_RETRY_MAX_ATTEMPTS as string,
+          ) as number,
+          delay: parseIntIfExists(
+            raw.EVENT_BUS_DLT_RETRY_DELAY as string,
+          ) as number,
+        },
+      },
     },
     cors: {
       origin: raw.CORS_ORIGIN as string,

@@ -13,6 +13,21 @@ export const configSchema = z.object({
       .default('development'),
     port: z.number().int().positive().default(3000),
   }),
+  eventBus: z.object({
+    client: z.object({
+      clientId: z.string().default('auth.auth-core'),
+      brokers: z.array(z.string().nonempty()),
+    }),
+    consumer: z.object({
+      groupId: z.string().default('auth.auth-core'),
+    }),
+    dlt: z.object({
+      retry: z.object({
+        maxAttempts: z.number().int().nonnegative().default(3),
+        delay: z.number().int().nonnegative().default(1000),
+      }),
+    }),
+  }),
   cors: z.object({
     origin: z.string().default('*'),
   }),
